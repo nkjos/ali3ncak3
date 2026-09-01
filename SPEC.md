@@ -108,8 +108,13 @@ export function buildSiteTheme(
 // - If theme.neutralAccent OR theme.style === 'monochromatic' OR the best
 //   candidate ratio < 2.0 → accent = modeColors.text (the neutral),
 //   accentText = opposite neutral.
-// - Else accent = the OTHER cycle color (not the section's own bg) with the
-//   highest contrastRatio vs bg; accentText = bestTextOn(accent).
+// - Else candidates are the OPPOSITE mode's cycle colors ("the alternate mode
+//   color variant") excluding the entry at the bg's own cycle index — within
+//   one mode all cycle colors share a lightness band, so the vivid contrast
+//   lives in the other mode's variants (pastel complement on a deep dark-mode
+//   background, deep complement on a pastel light-mode background). Pick the
+//   candidate with the highest contrastRatio vs bg;
+//   accentText = bestTextOn(accent).
 export interface AccentPick { accent: string; accentText: string }
 export function pickAccent(bg: string, theme: SiteTheme, mode: Mode): AccentPick
 

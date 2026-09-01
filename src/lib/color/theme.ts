@@ -156,8 +156,18 @@ export function pickAccent(bg: string, theme: SiteTheme, mode: Mode): AccentPick
   if (theme.neutralAccent || theme.style === 'monochromatic') {
     return neutralAccentPick(mc.text)
   }
+  // Accents come from the OPPOSITE mode's variants of the other hues ("the
+  // alternate mode color variant"): within one mode every cycle color sits in
+  // the same lightness band (tuned for that mode's text), so same-mode colors
+  // rarely contrast with each other. The opposite mode's variant of another
+  // hue gives a vivid, guaranteed-contrast CTA — e.g. a pastel complement
+  // button on a deep primary background in dark mode.
+  const opposite = theme[mode === 'dark' ? 'light' : 'dark']
   const bgLower = bg.toLowerCase()
-  const candidates = mc.colors.filter((c) => c.toLowerCase() !== bgLower)
+  const bgIndex = mc.colors.findIndex((c) => c.toLowerCase() === bgLower)
+  const candidates = opposite.colors.filter(
+    (c, i) => i !== bgIndex && c.toLowerCase() !== bgLower,
+  )
   if (candidates.length === 0) return neutralAccentPick(mc.text)
   let best = candidates[0]
   let bestRatio = contrastRatio(best, bg)
