@@ -1,0 +1,137 @@
+/* DevGate lock screen — self-contained dark neutral styling.
+   Deliberately does NOT use the theme's --c-* variables: this screen renders
+   before the site theme matters and must look right on its own. */
+
+.devgate {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #0b0b0f;
+  color: #e8e8ee;
+  font-family:
+    'Avenir Next', Avenir, 'Segoe UI', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.devgate__card {
+  width: 100%;
+  max-width: 380px;
+  padding: 36px 30px 26px;
+  background: #15151b;
+  border: 1px solid #262630;
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+  text-align: center;
+}
+
+.devgate__card--shake {
+  animation: devgate-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes devgate-shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-5px);
+  }
+  40%,
+  60% {
+    transform: translateX(5px);
+  }
+}
+
+.devgate__badge {
+  font-size: 30px;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+
+.devgate__title {
+  margin: 0 0 6px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.devgate__subtitle {
+  margin: 0 0 22px;
+  font-size: 14px;
+  color: #9a9aa8;
+}
+
+.devgate__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.devgate__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9a9aa8;
+}
+
+.devgate__input {
+  width: 100%;
+  padding: 11px 13px;
+  font-size: 16px;
+  color: #e8e8ee;
+  background: #0b0b0f;
+  border: 1px solid #33333f;
+  border-radius: 9px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.devgate__input:focus {
+  border-color: #6b6b7e;
+}
+
+.devgate__input[aria-invalid='true'] {
+  border-color: #b3454f;
+}
+
+.devgate__button {
+  width: 100%;
+  padding: 11px 13px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0b0b0f;
+  background: #e8e8ee;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.devgate__button:hover:enabled {
+  background: #ffffff;
+}
+
+.devgate__button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.devgate__error {
+  margin: 2px 0 0;
+  min-height: 1.2em;
+  font-size: 13px;
+  color: #ff7a85;
+  text-align: center;
+}

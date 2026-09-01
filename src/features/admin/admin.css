@@ -1,0 +1,578 @@
+/* Admin portal — clean utilitarian dashboard built on the theme surface
+   tokens. Derived shades use color-mix against --c-surface-text so every
+   line/panel adapts to both light and dark modes automatically. */
+
+.admin,
+.admin-signin {
+  --adm-line: color-mix(in srgb, var(--c-surface-text) 16%, transparent);
+  --adm-line-soft: color-mix(in srgb, var(--c-surface-text) 9%, transparent);
+  --adm-raise: color-mix(in srgb, var(--c-surface-text) 4%, var(--c-surface));
+  --adm-raise-2: color-mix(in srgb, var(--c-surface-text) 9%, var(--c-surface));
+  --adm-muted: var(--c-text2);
+  --adm-danger: #ef4444;
+  color: var(--c-surface-text);
+}
+
+.admin {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-3) var(--space-6);
+}
+
+/* ---- Header -------------------------------------------------------- */
+
+.admin-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.admin-title {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1.2;
+}
+
+.admin-subtitle {
+  margin: var(--space-1) 0 0;
+  color: var(--adm-muted);
+  font-size: 0.9rem;
+}
+
+.admin-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.admin-user-email {
+  font-size: 0.85rem;
+  color: var(--adm-muted);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Tabs ---------------------------------------------------------- */
+
+.admin-tabs {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--adm-line);
+  margin: var(--space-4) 0 0;
+  overflow-x: auto;
+}
+
+.admin-tab {
+  appearance: none;
+  border: none;
+  background: none;
+  color: var(--adm-muted);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+}
+
+.admin-tab:hover {
+  color: var(--c-surface-text);
+}
+
+.admin-tab.is-active {
+  color: var(--c-surface-text);
+  border-bottom-color: var(--c-primary);
+}
+
+.admin-panel {
+  padding-top: var(--space-4);
+}
+
+.admin-tab-body {
+  display: block;
+}
+
+/* ---- Buttons ------------------------------------------------------- */
+
+.admin-btn {
+  appearance: none;
+  border: 1px solid var(--adm-line);
+  background: var(--adm-raise);
+  color: var(--c-surface-text);
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-btn:hover:not(:disabled) {
+  background: var(--adm-raise-2);
+}
+
+.admin-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.admin-btn-primary {
+  background: var(--c-primary);
+  border-color: transparent;
+  color: var(--c-text);
+}
+
+.admin-btn-primary:hover:not(:disabled) {
+  background: var(--c-primary);
+  filter: brightness(1.12);
+}
+
+.admin-btn-danger {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--adm-danger) 45%, transparent);
+  color: var(--adm-danger);
+}
+
+.admin-btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--adm-danger) 12%, transparent);
+}
+
+.admin-icon-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* ---- Form controls ------------------------------------------------- */
+
+.admin-input,
+.admin-select,
+.admin-textarea {
+  appearance: none;
+  width: 100%;
+  border: 1px solid var(--adm-line);
+  background: var(--adm-raise);
+  color: var(--c-surface-text);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.admin-select {
+  width: auto;
+  cursor: pointer;
+}
+
+.admin-textarea {
+  resize: vertical;
+  min-height: 2.5em;
+}
+
+.admin-input:focus-visible,
+.admin-select:focus-visible,
+.admin-textarea:focus-visible,
+.admin-btn:focus-visible,
+.admin-tab:focus-visible,
+.admin-switch:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 1px;
+}
+
+.admin-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--adm-muted);
+}
+
+/* Toggle switch (styled checkbox) */
+
+.admin-switch {
+  appearance: none;
+  flex: none;
+  width: 38px;
+  height: 21px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--adm-line);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.admin-switch::before {
+  content: '';
+  position: absolute;
+  top: 2.5px;
+  left: 2.5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--c-surface-text);
+  transition: transform 0.15s ease;
+}
+
+.admin-switch:checked {
+  background: var(--c-primary);
+}
+
+.admin-switch:checked::before {
+  transform: translateX(17px);
+  background: var(--c-text);
+}
+
+.admin-switch-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---- Toolbar / save bar -------------------------------------------- */
+
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.admin-savebar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.admin-dirty {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--adm-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.admin-dirty-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+
+.admin-segment {
+  display: inline-flex;
+  border: 1px solid var(--adm-line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.admin-segment-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--adm-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 6px 18px;
+  cursor: pointer;
+}
+
+.admin-segment-btn.is-active {
+  background: var(--c-primary);
+  color: var(--c-text);
+}
+
+/* ---- Layout tab ---------------------------------------------------- */
+
+.admin-list {
+  list-style: none;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 14px;
+  border: 1px solid var(--adm-line-soft);
+  background: var(--adm-raise);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+}
+
+.admin-row.is-disabled .admin-row-name {
+  opacity: 0.5;
+}
+
+.admin-row-name {
+  font-weight: 600;
+}
+
+.admin-row-uid {
+  color: var(--adm-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+.admin-row-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.admin-add {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.admin-empty {
+  list-style: none;
+  color: var(--adm-muted);
+  text-align: center;
+  padding: var(--space-4);
+  border: 1px dashed var(--adm-line);
+  border-radius: var(--radius-md);
+}
+
+/* ---- Cards (products, settings) ------------------------------------ */
+
+.admin-card {
+  background: var(--adm-raise);
+  border: 1px solid var(--adm-line-soft);
+  border-radius: var(--radius-md);
+}
+
+.admin-card-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* ---- Products tab -------------------------------------------------- */
+
+.admin-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--space-3);
+}
+
+.admin-product {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-field > span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--adm-muted);
+}
+
+.admin-field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.admin-product-flags {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--adm-line-soft);
+}
+
+.admin-product-flags .admin-btn-danger {
+  margin-left: auto;
+}
+
+/* ---- Settings tab -------------------------------------------------- */
+
+.admin-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 620px;
+}
+
+.admin-settings-card {
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin-kv {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.admin-kv-key {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--adm-muted);
+}
+
+.admin-kv-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.admin-settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.admin-settings-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.admin-settings-controls .admin-input {
+  flex: 1 1 220px;
+  width: auto;
+}
+
+/* ---- Notes / status ------------------------------------------------- */
+
+.admin-note {
+  margin: var(--space-3) 0 0;
+  color: var(--adm-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.admin-settings-card .admin-note {
+  margin-top: 0;
+}
+
+.admin-error {
+  margin: 0;
+  color: var(--adm-danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.admin-success {
+  margin: 0;
+  color: #22c55e;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ---- Sign-in screen ------------------------------------------------- */
+
+.admin-signin {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) var(--space-3);
+}
+
+.admin-signin-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--adm-raise);
+  border: 1px solid var(--adm-line-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  padding: var(--space-5) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.admin-signin-title {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.admin-signin-sub {
+  margin: 0;
+  color: var(--adm-muted);
+  font-size: 0.9rem;
+}
+
+.admin-google-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  align-self: center;
+  background: #ffffff;
+  color: #1f1f1f;
+  border: 1px solid #dadce0;
+  border-radius: 999px;
+  padding: 10px 20px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+}
+
+.admin-google-btn:hover {
+  box-shadow: var(--shadow-1);
+}
+
+.admin-signin-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: left;
+}
+
+.admin-signin-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.admin-signin-note {
+  margin: 0;
+  color: var(--adm-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}

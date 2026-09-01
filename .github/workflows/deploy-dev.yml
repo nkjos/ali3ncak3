@@ -1,0 +1,61 @@
+# Dev deploy: push to `dev` → build with the client-side password gate
+# enabled (VITE_DEV_GATE=1) → publish dist to the external repo
+# nkjos/ali3ncak3-dev (branch gh-pages) → dev.ali3ncak3.com
+#
+# Requires (one-time, see docs/DEPLOY.md):
+#   - repo nkjos/ali3ncak3-dev exists with Pages serving branch gh-pages
+#   - deploy key with write access added to ali3ncak3-dev; private half
+#     stored on THIS repo as the DEV_DEPLOY_KEY secret
+#   - Custom domain dev.ali3ncak3.com configured + DNS at Wix
+#
+# NOTE: the gate is client-side only (hash embedded in the JS bundle) —
+# it deters casual visitors, it is not real security.
+
+name: Deploy dev (dev.ali3ncak3.com)
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-dev
+  cancel-in-progress: true
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (dev gate enabled)
+        run: npm run build
+        env:
+          VITE_DEV_GATE: '1'
+
+      - name: SPA 404 fallback
+        run: cp dist/index.html dist/404.html
+
+      - name: Custom domain CNAME
+        run: echo dev.ali3ncak3.com > dist/CNAME
+
+      - name: Publish to nkjos/ali3ncak3-dev (gh-pages)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.DEV_DEPLOY_KEY }}
+          external_repository: nkjos/ali3ncak3-dev
+          publish_branch: gh-pages
+          publish_dir: dist
