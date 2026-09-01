@@ -1,18 +1,23 @@
 // Shared product card used by the `promoted` and `productGrid` sections.
 // Card chrome uses the mode surface tokens (--c-surface / --c-surface-text);
-// the image placeholder + CTA pick up the enclosing section's --section-* vars.
+// the CTA picks up the enclosing section's --section-* vars, while the image
+// placeholder is tinted with a palette cycle color, alternating by card index.
 
 import { useEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import type { Product } from '../../content/types'
+import { useTheme } from '../../theme/ThemeProvider'
 
 export function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`
 }
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
+  const { modeColors } = useTheme()
   const [added, setAdded] = useState(false)
   const timerRef = useRef<number | null>(null)
   const outOfStock = product.stock <= 0
+  const tint = modeColors.colors[index % modeColors.colors.length]
 
   useEffect(
     () => () => {
@@ -29,7 +34,7 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <article className="product-card">
+    <article className="product-card" style={{ '--card-tint': tint } as CSSProperties}>
       <div className="product-card__img" aria-hidden="true" />
       <div className="product-card__row">
         <h3 className="product-card__title">{product.title}</h3>
@@ -49,6 +54,9 @@ export function ProductCard({ product }: { product: Product }) {
       >
         {added ? 'Added to cart!' : 'Add to cart'}
       </button>
+      <span className="visually-hidden" role="status">
+        {added ? `${product.title} added to cart` : ''}
+      </span>
     </article>
   )
 }

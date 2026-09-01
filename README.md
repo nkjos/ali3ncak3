@@ -1,32 +1,48 @@
-# React + TypeScript + Vite
+# Ali3nCak3
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Prototype storefront for **[ali3ncak3.com](https://ali3ncak3.com)** — small-batch
+bakes from another galaxy.
 
-Currently, two official plugins are available:
+Vite + React + TypeScript SPA, deployed to GitHub Pages:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Branch | Site | Notes |
+| --- | --- | --- |
+| `main` | https://ali3ncak3.com | auto-deploys via GitHub Actions |
+| `dev` | https://dev.ali3ncak3.com | auto-deploys, client-side password gate |
 
-## React Compiler
+## Highlights
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Palette designer** (`/admin` → Palette): Figma-style color wheel; pick one
+  base color and every harmony (monochromatic → square) is generated with
+  dark + light mode variants, WCAG-contrast-tuned backgrounds, live mini-site
+  previews, and one-click apply. Recent-color history with Shift+click delete.
+- **Section color cycling**: page sections alternate through the palette's
+  cycle (`sections[i] = colors[i % k]`), the navbar takes the color before the
+  first section and the footer continues after the last, so reordering or
+  disabling sections in the admin Layout tab restyles everything automatically.
+- **CTA accents**: buttons use the opposite mode's variant of another hue
+  (guaranteed contrast), or black/white neutral via a per-palette toggle.
+- **Admin portal** (`/admin`, no nav link): layout reordering, product/stock
+  management, palette designer, co-owner management.
 
-## Expanding the Oxlint configuration
+## Prototype constraints
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+No backend yet. Content (layout, products, theme) lives in a
+localStorage-backed store (`src/content/store.ts`) shaped like a remote store
+so Firebase/Supabase can replace it later — until then, admin "publish"
+affects only the current browser, and the admin sign-in is a stub
+(`src/features/admin/auth.ts`). The dev-site password gate is client-side
+only and not real security.
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## Develop
+
+```bash
+npm install
+npm run dev        # site on :5173
+npm run dev:gate   # gated variant on :5174 (dev password gate enabled)
+npm test           # color engine test suite
+npm run build      # production build to dist/
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+See [SPEC.md](SPEC.md) for the full product contract and
+[docs/DEPLOY.md](docs/DEPLOY.md) for the deploy pipeline + DNS runbook.

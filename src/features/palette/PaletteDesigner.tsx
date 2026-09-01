@@ -155,14 +155,30 @@ export default function PaletteDesigner() {
 
   // Recent colors: click selects, Shift+click asks to delete.
   const [pendingDelete, setPendingDelete] = useState<string | null>(null)
+  const modalRef = useRef<HTMLDivElement | null>(null)
+  const historyListRef = useRef<HTMLDivElement | null>(null)
+  const restoreFocusRef = useRef<HTMLElement | null>(null)
 
   const onHistorySwatch = (e: ReactMouseEvent<HTMLButtonElement>, color: string) => {
     if (e.shiftKey) {
+      restoreFocusRef.current = e.currentTarget
       setPendingDelete(color)
       return
     }
     const parsed = safeHsl(color)
     if (parsed) setHsl(parsed)
+  }
+
+  // Close the dialog and put focus back where it came from; after a confirmed
+  // delete the swatch is gone, so fall back to the history list container.
+  const closeDialog = () => {
+    setPendingDelete(null)
+    const target = restoreFocusRef.current
+    restoreFocusRef.current = null
+    requestAnimationFrame(() => {
+      if (target?.isConnected) target.focus()
+      else historyListRef.current?.focus()
+    })
   }
 
   const confirmDelete = () => {
@@ -172,16 +188,35 @@ export default function PaletteDesigner() {
       ...ws,
       history: ws.history.filter((c) => c !== pendingDelete),
     })
-    setPendingDelete(null)
+    closeDialog()
   }
 
   useEffect(() => {
     if (pendingDelete === null) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setPendingDelete(null)
+      if (e.key === 'Escape') {
+        closeDialog()
+        return
+      }
+      if (e.key === 'Tab') {
+        const modal = modalRef.current
+        const focusables = modal?.querySelectorAll<HTMLElement>('button')
+        if (!modal || !focusables || focusables.length === 0) return
+        const first = focusables[0]
+        const last = focusables[focusables.length - 1]
+        const active = document.activeElement
+        if (e.shiftKey && (active === first || !modal.contains(active))) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && (active === last || !modal.contains(active))) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingDelete])
 
   const midHex = hslToHex({ h: hsl.h, s: hsl.s, l: 50 })
@@ -308,7 +343,7 @@ export default function PaletteDesigner() {
             {workspace.history.length === 0 ? (
               <p className="pd-history-empty">Colors you apply will appear here.</p>
             ) : (
-              <div className="pd-history-list">
+              <div className="pd-history-list" ref={historyListRef} tabIndex={-1}>
                 {workspace.history.map((color, i) => (
                   <button
                     key={`${color}-${i}`}
@@ -354,10 +389,11 @@ export default function PaletteDesigner() {
       {pendingDelete !== null && (
         <div
           className="pd-modal-backdrop"
-          onClick={() => setPendingDelete(null)}
+          onClick={closeDialog}
           role="presentation"
         >
           <div
+            ref={modalRef}
             className="pd-modal"
             role="dialog"
             aria-modal="true"
@@ -376,7 +412,7 @@ export default function PaletteDesigner() {
               <button
                 type="button"
                 className="pd-btn"
-                onClick={() => setPendingDelete(null)}
+                onClick={closeDialog}
                 autoFocus
               >
                 Cancel

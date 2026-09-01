@@ -18,7 +18,8 @@ permissions:
 
 concurrency:
   group: pages-main
-  cancel-in-progress: true
+  # Never cancel an in-progress production deploy; queued runs are superseded.
+  cancel-in-progress: false
 
 jobs:
   build:

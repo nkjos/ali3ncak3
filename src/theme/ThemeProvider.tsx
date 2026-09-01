@@ -11,7 +11,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   type ReactNode,
 } from 'react'
@@ -57,7 +57,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     [mode],
   )
 
-  useEffect(() => {
+  // Layout effect: swap the variables before paint so mode/theme changes
+  // (and the first mount after the index.html pre-paint script) never flash.
+  useLayoutEffect(() => {
     const root = document.documentElement
     root.dataset.mode = mode
     root.style.setProperty('--c-primary', modeColors.primary)

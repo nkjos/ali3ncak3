@@ -5,6 +5,36 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ali3ncak3</title>
+    <script>
+      // Pre-paint mode resolution so light-mode visitors don't get a dark
+      // flash: visitor toggle > applied theme default > system preference.
+      // ThemeProvider re-applies the full variable set on mount.
+      ;(function () {
+        try {
+          var mode = JSON.parse(localStorage.getItem('ac3:modePref') || 'null')
+          var theme = JSON.parse(localStorage.getItem('ac3:theme') || 'null')
+          if (mode !== 'light' && mode !== 'dark') {
+            mode = theme && theme.defaultMode
+          }
+          if (mode !== 'light' && mode !== 'dark') {
+            mode = window.matchMedia('(prefers-color-scheme: light)').matches
+              ? 'light'
+              : 'dark'
+          }
+          var root = document.documentElement
+          root.dataset.mode = mode
+          var mc = theme && theme[mode]
+          if (mc) {
+            root.style.setProperty('--c-surface', mc.surface)
+            root.style.setProperty('--c-surface-text', mc.surfaceText)
+            root.style.setProperty('--c-text', mc.text)
+            root.style.setProperty('--c-text2', mc.text2)
+          }
+        } catch (e) {
+          /* fall back to the CSS defaults */
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

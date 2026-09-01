@@ -68,8 +68,8 @@ export function PromotedSection({ colors }: SectionComponentProps) {
         <p className="section__empty">New drops landing soon — check back shortly.</p>
       ) : (
         <div className="product-grid">
-          {promoted.map((p) => (
-            <ProductCard key={p.id} product={p} />
+          {promoted.map((p, i) => (
+            <ProductCard key={p.id} product={p} index={i} />
           ))}
         </div>
       )}
@@ -126,8 +126,8 @@ export function ProductGridSection({ colors }: SectionComponentProps) {
         <p className="section__empty">The shelves are empty — restock incoming.</p>
       ) : (
         <div className="product-grid">
-          {published.map((p) => (
-            <ProductCard key={p.id} product={p} />
+          {published.map((p, i) => (
+            <ProductCard key={p.id} product={p} index={i} />
           ))}
         </div>
       )}

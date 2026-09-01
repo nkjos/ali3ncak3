@@ -185,7 +185,6 @@ export default function ColorWheel({ hue, sat, knobColor, onChange }: ColorWheel
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
-      aria-label="Color wheel. Drag to set hue and saturation."
     >
       <canvas ref={canvasRef} className="pd-wheel-canvas" aria-hidden="true" />
       <div
@@ -195,8 +194,8 @@ export default function ColorWheel({ hue, sat, knobColor, onChange }: ColorWheel
         aria-label="Hue and saturation"
         aria-valuemin={0}
         aria-valuemax={359}
-        aria-valuenow={Math.round(norm360(hue))}
-        aria-valuetext={`Hue ${Math.round(norm360(hue))} degrees, saturation ${Math.round(sat)} percent`}
+        aria-valuenow={Math.round(norm360(hue)) % 360}
+        aria-valuetext={`Hue ${Math.round(norm360(hue)) % 360} degrees, saturation ${Math.round(sat)} percent`}
         onKeyDown={onKnobKeyDown}
         style={{
           left: `${knobLeft}%`,

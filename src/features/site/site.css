@@ -281,7 +281,8 @@
   width: 100%;
   aspect-ratio: 1 / 1;
   border-radius: var(--radius-sm);
-  background: var(--section-accent);
+  /* Palette cycle color, alternating per card (set by ProductCard). */
+  background: var(--card-tint, var(--c-primary));
   opacity: 0.88;
 }
 

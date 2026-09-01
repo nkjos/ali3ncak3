@@ -21,7 +21,9 @@
   --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.25);
   --shadow-2: 0 6px 24px rgba(0, 0, 0, 0.25);
 
-  /* Fallbacks until ThemeProvider mounts (match DEFAULT_THEME dark). */
+  /* Fallbacks until ThemeProvider mounts (match DEFAULT_THEME dark).
+     A pre-paint script in index.html sets data-mode (and, when a palette has
+     been applied, the surface/text vars) before first render. */
   --c-primary: #312e81;
   --c-secondary: #713f12;
   --c-tertiary: #312e81;
@@ -30,6 +32,30 @@
   --c-text2: #c7cad6;
   --c-surface: #101018;
   --c-surface-text: #ffffff;
+}
+
+/* Light-mode fallbacks (match DEFAULT_THEME light) for the pre-mount frame. */
+:root[data-mode='light'] {
+  --c-primary: #c7d2fe;
+  --c-secondary: #fde68a;
+  --c-tertiary: #c7d2fe;
+  --c-quaternary: #fde68a;
+  --c-text: #000000;
+  --c-text2: #3f3f46;
+  --c-surface: #ffffff;
+  --c-surface-text: #000000;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 html,
