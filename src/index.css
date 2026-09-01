@@ -1,0 +1,67 @@
+/* Base reset + design tokens. Palette color variables (--c-*) are set at
+   runtime by ThemeProvider; sections receive their own --section-* vars. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --font-body: 'Avenir Next', Avenir, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 40px;
+  --space-6: 64px;
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-2: 0 6px 24px rgba(0, 0, 0, 0.25);
+
+  /* Fallbacks until ThemeProvider mounts (match DEFAULT_THEME dark). */
+  --c-primary: #312e81;
+  --c-secondary: #713f12;
+  --c-tertiary: #312e81;
+  --c-quaternary: #713f12;
+  --c-text: #ffffff;
+  --c-text2: #c7cad6;
+  --c-surface: #101018;
+  --c-surface-text: #ffffff;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--c-surface);
+  color: var(--c-surface-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
