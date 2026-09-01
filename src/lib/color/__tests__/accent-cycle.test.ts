@@ -6,6 +6,7 @@ import {
   hslToHex,
   pickAccent,
   sectionColorScheme,
+  sectionTextOn,
   type Mode,
   type ModeColors,
   type SiteTheme,
@@ -44,18 +45,37 @@ function craftTheme(overrides: Partial<SiteTheme> = {}): SiteTheme {
 }
 
 describe('pickAccent', () => {
-  it('complementary non-neutral picks the opposite-mode variant of the other hue', () => {
+  /** The implementation's candidate rule: other-index colors from BOTH modes. */
+  function expectedAccent(bg: string, theme: SiteTheme, mode: Mode): string {
+    const bgIndex = theme[mode].colors.findIndex(
+      (c) => c.toLowerCase() === bg.toLowerCase(),
+    )
+    const candidates: string[] = []
+    for (const side of [theme.light, theme.dark]) {
+      side.colors.forEach((c, i) => {
+        if (i !== bgIndex && c.toLowerCase() !== bg.toLowerCase()) candidates.push(c)
+      })
+    }
+    return candidates.reduce((best, c) =>
+      contrastRatio(c, bg) > contrastRatio(best, bg) ? c : best,
+    )
+  }
+
+  it('complementary non-neutral picks the max-contrast other-hue variant', () => {
     const theme = craftTheme()
 
+    // Deep navy bg: the pastel complement wins by contrast.
     const fromNavy = pickAccent('#0b1d51', theme, 'dark')
     expect(fromNavy.accent).toBe('#fde68a')
     expect(fromNavy.accentText).toBe(bestTextOn('#fde68a'))
 
+    // Mid-rust bg: the deep navy narrowly beats the pastel (3.31 vs 3.22) —
+    // either mode's variant may win, whichever contrasts most.
     const fromOrange = pickAccent('#b9541b', theme, 'dark')
-    expect(fromOrange.accent).toBe('#c7d2fe')
-    expect(fromOrange.accentText).toBe(bestTextOn('#c7d2fe'))
+    expect(fromOrange.accent).toBe(expectedAccent('#b9541b', theme, 'dark'))
+    expect(fromOrange.accent).toBe('#0b1d51')
 
-    // From light mode the accent comes from the dark variants.
+    // From light mode the deep variants win over sibling pastels.
     const fromPastel = pickAccent('#c7d2fe', theme, 'light')
     expect(fromPastel.accent).toBe('#b9541b')
     expect(fromPastel.accentText).toBe(bestTextOn('#b9541b'))
@@ -88,7 +108,16 @@ describe('pickAccent', () => {
   })
 
   it('falls back to neutral when the best candidate ratio is < 2.0', () => {
-    // Crafted so the only opposite-mode candidate sits near the bg's lightness.
+    // Crafted so every other-index candidate sits near the bg's lightness.
+    const dark: ModeColors = {
+      colors: ['#0b1d51', '#101c40'],
+      primary: '#0b1d51',
+      secondary: '#101c40',
+      text: '#ffffff',
+      text2: '#c7cad6',
+      surface: '#101018',
+      surfaceText: '#ffffff',
+    }
     const light: ModeColors = {
       colors: ['#c7d2fe', '#4a4a4a'],
       primary: '#c7d2fe',
@@ -98,16 +127,17 @@ describe('pickAccent', () => {
       surface: '#ffffff',
       surfaceText: '#000000',
     }
-    const theme = craftTheme({ light })
-    // bg = dark colors[0]; the only candidate is light colors[1].
+    const theme = craftTheme({ dark, light })
+    // bg = dark colors[0]; candidates are light[1] and dark[1], both < 2.0.
     expect(contrastRatio('#0b1d51', '#4a4a4a')).toBeLessThan(2)
+    expect(contrastRatio('#0b1d51', '#101c40')).toBeLessThan(2)
     expect(pickAccent('#0b1d51', theme, 'dark')).toEqual({
       accent: '#ffffff',
       accentText: '#000000',
     })
   })
 
-  it('with 3+ colors picks the highest-contrast opposite-mode candidate', () => {
+  it('with 3+ colors picks the highest-contrast candidate from either mode', () => {
     const dark: ModeColors = {
       colors: ['#101040', '#a34d10', '#2e6b2e'],
       primary: '#101040',
@@ -130,12 +160,8 @@ describe('pickAccent', () => {
     }
     const theme = craftTheme({ style: 'triadic', dark, light })
     const bg = dark.colors[0]
-    const candidates = light.colors.filter((_, i) => i !== 0)
-    const expected = candidates.reduce((best, c) =>
-      contrastRatio(c, bg) > contrastRatio(best, bg) ? c : best,
-    )
     const pick = pickAccent(bg, theme, 'dark')
-    expect(pick.accent).toBe(expected)
+    expect(pick.accent).toBe(expectedAccent(bg, theme, 'dark'))
     expect(pick.accent).not.toBe(bg)
   })
 
@@ -147,17 +173,11 @@ describe('pickAccent', () => {
         const theme = buildSiteTheme(base, style, false)
         for (const mode of ['dark', 'light'] as Mode[]) {
           const mc = theme[mode]
-          const opp = theme[mode === 'dark' ? 'light' : 'dark']
-          mc.colors.forEach((bg, idx) => {
-            const candidates = opp.colors.filter(
-              (c, i) => i !== idx && c.toLowerCase() !== bg.toLowerCase(),
-            )
-            const best = candidates.reduce((acc, c) =>
-              contrastRatio(c, bg) > contrastRatio(acc, bg) ? c : acc,
-            )
+          mc.colors.forEach((bg) => {
+            const best = expectedAccent(bg, theme, mode)
             const pick = pickAccent(bg, theme, mode)
             if (contrastRatio(best, bg) < 2) {
-              expect(pick.accent).toBe(mc.text)
+              expect(pick.accent).toBe(sectionTextOn(bg, mode))
             } else {
               expect(pick.accent).toBe(best)
               expect(pick.accentText).toBe(bestTextOn(best))
@@ -168,14 +188,17 @@ describe('pickAccent', () => {
     }
   })
 
-  it('a built dark theme yields a vivid opposite-mode accent', () => {
+  it('a built dark blue theme gets a vivid yellow section and accent', () => {
+    // The complement of deep blue is yellow — adaptive dark keeps it VIVID
+    // (black text) instead of darkening it to olive.
     const theme = buildSiteTheme('#1d1da8', 'complementary', false)
-    const pick = pickAccent(theme.dark.colors[0], theme, 'dark')
-    // Deep primary background gets the pastel complement as its CTA color.
-    expect(pick.accent).toBe(theme.light.colors[1])
-    expect(
-      contrastRatio(pick.accent, theme.dark.colors[0]),
-    ).toBeGreaterThanOrEqual(2)
+    const [c0, c1] = theme.dark.colors
+    expect(contrastRatio(c1, '#000000')).toBeGreaterThanOrEqual(4.5)
+    expect(sectionTextOn(c1, 'dark')).toBe('#000000')
+    // The deep primary's CTA is the max-contrast other-hue variant.
+    const pick = pickAccent(c0, theme, 'dark')
+    expect(pick.accent).toBe(expectedAccent(c0, theme, 'dark'))
+    expect(contrastRatio(pick.accent, c0)).toBeGreaterThanOrEqual(2)
   })
 })
 
@@ -213,15 +236,17 @@ describe('sectionColorScheme cycle math', () => {
     expect(scheme.footer.bg).toBe(theme.dark.colors[0])
   })
 
-  it('every entry carries mode text/text2 and its pickAccent result', () => {
+  it('every entry carries contrast-safe text/text2 and its pickAccent result', () => {
     for (const neutralAccent of [false, true]) {
       const theme = buildSiteTheme('#0f766e', 'tetradic', neutralAccent)
       for (const mode of ['dark', 'light'] as Mode[]) {
         const mc = theme[mode]
         const scheme = sectionColorScheme(5, theme, mode)
         for (const entry of [scheme.nav, scheme.footer, ...scheme.sections]) {
-          expect(entry.text).toBe(mc.text)
-          expect(entry.text2).toBe(mc.text2)
+          expect(entry.text).toBe(sectionTextOn(entry.bg, mode))
+          if (entry.text === mc.text) expect(entry.text2).toBe(mc.text2)
+          expect(contrastRatio(entry.text, entry.bg)).toBeGreaterThanOrEqual(4.5)
+          expect(contrastRatio(entry.text2, entry.bg)).toBeGreaterThanOrEqual(4.5)
           const expected = pickAccent(entry.bg, theme, mode)
           expect(entry.accent).toBe(expected.accent)
           expect(entry.accentText).toBe(expected.accentText)

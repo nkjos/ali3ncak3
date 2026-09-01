@@ -85,8 +85,15 @@ export function ensureContrast(hex: string, text: string, target?: number): stri
 
 // Theme building.
 // - defaultMode = detectModeForBase(baseHex)
-// - dark.colors[i]: hue i tuned so white text hits >= 4.5 (start from a deep
-//   variant, e.g. l clamped to ~18–38 before tuning).
+// - dark.colors[i]: ADAPTIVE (in OKLCH, so chroma survives darkening):
+//   hues that darken gracefully become deep "jewel" variants (chroma near
+//   the gamut max, lightness lowered until white text hits >= 4.5); hues in
+//   the yellow→chartreuse band (OKLCH h ≈ 75–145, where any white-text-deep
+//   variant is olive/brown) REFUSE to darken and stay near their vivid cusp
+//   with black text instead. Achromatic sources never count as vivid.
+//   Variant chroma scales with the source's relative chroma so muted picks
+//   stay muted. sectionTextOn(bg, mode) resolves the per-section text:
+//   the mode's canonical neutral when it passes, flipped otherwise.
 // - light.colors[i]: hue i tuned so black text hits >= 4.5 (pastel variant,
 //   l ~70–88 before tuning; black text passes easily — keep colors clearly
 //   light so sections read as light mode).
@@ -106,15 +113,13 @@ export function buildSiteTheme(
 
 // CTA accent for a given background:
 // - If theme.neutralAccent OR theme.style === 'monochromatic' OR the best
-//   candidate ratio < 2.0 → accent = modeColors.text (the neutral),
-//   accentText = opposite neutral.
-// - Else candidates are the OPPOSITE mode's cycle colors ("the alternate mode
-//   color variant") excluding the entry at the bg's own cycle index — within
-//   one mode all cycle colors share a lightness band, so the vivid contrast
-//   lives in the other mode's variants (pastel complement on a deep dark-mode
-//   background, deep complement on a pastel light-mode background). Pick the
-//   candidate with the highest contrastRatio vs bg;
-//   accentText = bestTextOn(accent).
+//   candidate ratio < 2.0 → accent = sectionTextOn(bg, mode) (the section's
+//   own text neutral), accentText = the opposite neutral.
+// - Else candidates are BOTH modes' cycle colors excluding the bg's own
+//   cycle index ("the alternate mode color variant", generalized): on a deep
+//   jewel section the pastel/vivid variants win; on a vivid yellow section a
+//   deep jewel wins. Pick the candidate with the highest contrastRatio vs
+//   bg; accentText = bestTextOn(accent).
 export interface AccentPick { accent: string; accentText: string }
 export function pickAccent(bg: string, theme: SiteTheme, mode: Mode): AccentPick
 

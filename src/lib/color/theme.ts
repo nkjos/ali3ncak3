@@ -5,6 +5,7 @@ import type { Mode, ModeColors, PaletteStyle, SiteTheme } from '../../content/ty
 import { clamp, hexToHsl, hslToHex, type Hsl } from './convert'
 import { bestTextOn, contrastRatio, detectModeForBase, relativeLuminance } from './wcag'
 import { generateHues } from './styles'
+import { cuspLightness, hexToOklch, maxChroma, oklchToHex } from './oklch'
 
 export const CONTRAST_TARGET = 4.5
 
@@ -65,29 +66,99 @@ function monoSecond(first: string, mode: Mode, text: string): string {
   return ensureContrast(hslToHex({ h, s, l: Math.min(98, l + 8) }), text)
 }
 
-// Preferred muted secondary-text grays; tuneText2 nudges them toward the
-// mode's text pole until they pass CONTRAST_TARGET on every background.
-const TEXT2_DARK_START: Hsl = { h: 225, s: 14, l: 81 } // ≈ #c7cad6
-const TEXT2_LIGHT_START: Hsl = { h: 240, s: 5, l: 26 } // ≈ #3f3f46
+// Preferred muted secondary-text grays; tuneGray nudges them toward the
+// given text pole until they pass CONTRAST_TARGET on every background.
+const TEXT2_LIGHT_GRAY: Hsl = { h: 225, s: 14, l: 81 } // ≈ #c7cad6 (for white-text bgs)
+const TEXT2_DARK_GRAY: Hsl = { h: 240, s: 5, l: 26 } // ≈ #3f3f46 (for black-text bgs)
 
 /**
- * Secondary text color for a mode: starts from the preferred gray and moves
- * its lightness toward the mode's text pole (white in dark, black in light)
- * until it reaches `target` contrast against EVERY given background. The
- * backgrounds themselves are tuned to pass vs pure white/black, so the loop
- * always converges (worst case: text2 == the neutral pole).
+ * Secondary text color for backgrounds whose primary text is `pole`: starts
+ * from the preferred gray on that side and moves its lightness toward the
+ * pole until it reaches `target` contrast against EVERY given background.
+ * Backgrounds are tuned to pass vs the pole itself, so the loop always
+ * converges (worst case: text2 == the pole).
  */
-function tuneText2(mode: Mode, backgrounds: string[], target = CONTRAST_TARGET): string {
-  const { h, s, l: startL } = mode === 'dark' ? TEXT2_DARK_START : TEXT2_LIGHT_START
-  const towardWhite = mode === 'dark'
+function tuneGray(
+  pole: '#ffffff' | '#000000',
+  backgrounds: string[],
+  target = CONTRAST_TARGET,
+): string {
+  const towardWhite = pole === '#ffffff'
+  const { h, s, l: startL } = towardWhite ? TEXT2_LIGHT_GRAY : TEXT2_DARK_GRAY
   let l = startL
   let out = hslToHex({ h, s, l })
   const passes = (hex: string) => backgrounds.every((bg) => contrastRatio(hex, bg) >= target)
   while (!passes(out)) {
     const bound = towardWhite ? 100 : 0
-    if (l === bound) return towardWhite ? '#ffffff' : '#000000'
+    if (l === bound) return pole
     l = towardWhite ? Math.min(bound, l + 1) : Math.max(bound, l - 1)
     out = hslToHex({ h, s, l })
+  }
+  return out
+}
+
+/**
+ * Primary text on a cycle background: the mode's canonical neutral (white in
+ * dark, black in light) whenever it passes, flipping only when it cannot —
+ * e.g. a vivid yellow section in adaptive dark mode takes black text.
+ */
+export function sectionTextOn(bg: string, mode: Mode): '#ffffff' | '#000000' {
+  const preferred = mode === 'dark' ? '#ffffff' : '#000000'
+  if (contrastRatio(bg, preferred) >= CONTRAST_TARGET) return preferred
+  return preferred === '#ffffff' ? '#000000' : '#ffffff'
+}
+
+// --- Adaptive dark variants -------------------------------------------------
+// Darkening is done in OKLCH so chroma survives (HSL darkening collapses it
+// into gray-brown). Hues in the yellow→chartreuse band cannot be darkened
+// enough for white text without turning olive — those REFUSE to darken and
+// stay near their vivid cusp with black text instead.
+
+const VIVID_HUE_MIN = 75
+const VIVID_HUE_MAX = 145
+
+function isVividHue(okHue: number): boolean {
+  return okHue >= VIVID_HUE_MIN && okHue <= VIVID_HUE_MAX
+}
+
+/** Chroma below which a color is effectively achromatic — its OKLCH hue
+ *  angle is numerical noise and must not drive any hue-based decision. */
+const ACHROMATIC_C = 0.02
+
+/** How saturated a color is relative to what its hue/lightness allows, so
+ *  muted picks produce comparably muted variants. Chromatic colors get a
+ *  0.35 floor; near-grays keep their (near-zero) ratio so no hue is
+ *  invented for them. */
+function relativeChroma(hex: string): number {
+  const { L, C, h } = hexToOklch(hex)
+  const max = maxChroma(L, h)
+  if (max <= 1e-4) return 1
+  const ratio = Math.min(1, C / max)
+  return C < ACHROMATIC_C ? ratio : Math.max(0.35, ratio)
+}
+
+/** Deep jewel variant: same OKLCH hue, chroma near the gamut maximum,
+ *  lightness lowered until white text passes. */
+function jewelDark(hex: string, rel: number): string {
+  const { h } = hexToOklch(hex)
+  let L = 0.62
+  let out = oklchToHex({ L, C: maxChroma(L, h) * 0.96 * rel, h })
+  while (contrastRatio(out, '#ffffff') < CONTRAST_TARGET && L > 0.08) {
+    L -= 0.01
+    out = oklchToHex({ L, C: maxChroma(L, h) * 0.96 * rel, h })
+  }
+  return out
+}
+
+/** Vivid variant for hues that cannot darken: the hue near its chroma cusp,
+ *  bright enough for black text. */
+function vividBright(hex: string, rel: number): string {
+  const { h } = hexToOklch(hex)
+  let L = Math.max(cuspLightness(h).L, 0.75)
+  let out = oklchToHex({ L, C: maxChroma(L, h) * 0.94 * rel, h })
+  while (contrastRatio(out, '#000000') < CONTRAST_TARGET && L < 0.98) {
+    L += 0.01
+    out = oklchToHex({ L, C: maxChroma(L, h) * 0.94 * rel, h })
   }
   return out
 }
@@ -106,24 +177,49 @@ function buildModeColors(
   const colors: string[] = []
   for (let i = 0; i < hueCount; i++) {
     const hue = hues[i]
-    // In its native mode the base color stays recognizable: colors[0] starts
-    // from the picked color itself. Everything else starts from the mode's
-    // lightness band (deep variant in dark, pastel in light) before tuning.
-    const startL = i === 0 && mode === nativeMode ? baseHsl.l : clamp(hue.l, lo, hi)
-    colors.push(ensureContrast(hslToHex({ h: hue.h, s: hue.s, l: startL }), text))
+    if (i === 0 && mode === nativeMode) {
+      // The base color stays recognizable in its native mode: colors[0] is
+      // the pick itself (a native-dark pick always passes vs white, since
+      // detectModeForBase chose dark because white was the better text).
+      colors.push(ensureContrast(hslToHex({ h: hue.h, s: hue.s, l: baseHsl.l }), text))
+      continue
+    }
+    const source = hslToHex({ h: hue.h, s: hue.s, l: hue.l })
+    if (mode === 'dark') {
+      // Adaptive dark: jewel-deep where the hue survives darkening, vivid
+      // with black text where it would go olive (yellow→chartreuse band).
+      // Achromatic sources never count as vivid — their hue is noise.
+      const rel = relativeChroma(source)
+      const ok = hexToOklch(source)
+      const vivid = ok.C >= ACHROMATIC_C && isVividHue(ok.h)
+      colors.push(vivid ? vividBright(source, rel) : jewelDark(source, rel))
+    } else {
+      colors.push(
+        ensureContrast(hslToHex({ h: hue.h, s: hue.s, l: clamp(hue.l, lo, hi) }), text),
+      )
+    }
   }
   if (style === 'monochromatic') {
-    colors.push(monoSecond(colors[0], mode, text))
+    // A bright (black-text) mono primary pairs with its own deep jewel;
+    // otherwise use the classic distinct lightness step.
+    if (mode === 'dark' && contrastRatio(colors[0], '#ffffff') < CONTRAST_TARGET) {
+      colors.push(jewelDark(colors[0], relativeChroma(colors[0])))
+    } else {
+      colors.push(monoSecond(colors[0], mode, text))
+    }
   }
 
   const surface = mode === 'dark' ? '#101018' : '#ffffff'
+  // Mode-level text2 covers the surface plus every cycle color that keeps the
+  // mode's canonical text; flipped (vivid black-text) entries get their own
+  // per-entry gray in sectionColorScheme.
+  const canonicalBgs = colors.filter((c) => sectionTextOn(c, mode) === text)
   const mc: ModeColors = {
     colors,
     primary: colors[0],
     secondary: colors[1],
     text,
-    // Guaranteed >= 4.5 on every cycle background AND the surface.
-    text2: tuneText2(mode, [...colors, surface]),
+    text2: tuneGray(text as '#ffffff' | '#000000', [...canonicalBgs, surface]),
     surface,
     surfaceText: text,
   }
@@ -177,27 +273,26 @@ function neutralAccentPick(modeText: string): AccentPick {
 /**
  * CTA accent for a section background:
  * - neutralAccent themes, monochromatic themes, or a best candidate ratio
- *   below 2.0 => the mode neutral (text color) with the opposite neutral label
- * - otherwise the OTHER cycle color with the highest contrast vs bg.
+ *   below 2.0 => the section's own text color as accent, opposite label
+ * - otherwise the highest-contrast OTHER-hue variant from EITHER mode's
+ *   cycle ("the alternate mode color variant"): on a deep jewel section the
+ *   pastel/vivid variants win; on a vivid yellow section a deep jewel wins.
  */
 export function pickAccent(bg: string, theme: SiteTheme, mode: Mode): AccentPick {
   const mc = theme[mode]
+  const neutral = () => neutralAccentPick(sectionTextOn(bg, mode))
   if (theme.neutralAccent || theme.style === 'monochromatic') {
-    return neutralAccentPick(mc.text)
+    return neutral()
   }
-  // Accents come from the OPPOSITE mode's variants of the other hues ("the
-  // alternate mode color variant"): within one mode every cycle color sits in
-  // the same lightness band (tuned for that mode's text), so same-mode colors
-  // rarely contrast with each other. The opposite mode's variant of another
-  // hue gives a vivid, guaranteed-contrast CTA — e.g. a pastel complement
-  // button on a deep primary background in dark mode.
-  const opposite = theme[mode === 'dark' ? 'light' : 'dark']
   const bgLower = bg.toLowerCase()
   const bgIndex = mc.colors.findIndex((c) => c.toLowerCase() === bgLower)
-  const candidates = opposite.colors.filter(
-    (c, i) => i !== bgIndex && c.toLowerCase() !== bgLower,
-  )
-  if (candidates.length === 0) return neutralAccentPick(mc.text)
+  const candidates: string[] = []
+  for (const side of [theme.light, theme.dark]) {
+    side.colors.forEach((c, i) => {
+      if (i !== bgIndex && c.toLowerCase() !== bgLower) candidates.push(c)
+    })
+  }
+  if (candidates.length === 0) return neutral()
   let best = candidates[0]
   let bestRatio = contrastRatio(best, bg)
   for (let i = 1; i < candidates.length; i++) {
@@ -207,7 +302,7 @@ export function pickAccent(bg: string, theme: SiteTheme, mode: Mode): AccentPick
       bestRatio = ratio
     }
   }
-  if (bestRatio < ACCENT_MIN_RATIO) return neutralAccentPick(mc.text)
+  if (bestRatio < ACCENT_MIN_RATIO) return neutral()
   return { accent: best, accentText: bestTextOn(best) }
 }
 
@@ -240,8 +335,12 @@ export function sectionColorScheme(
   const k = mc.colors.length
   const n = Math.max(0, Math.floor(visibleSectionCount))
   const entry = (bg: string): SectionColors => {
+    // Canonical mode text where it passes; vivid (flipped) sections get the
+    // opposite neutral and a gray tuned against their own background.
+    const text = sectionTextOn(bg, mode)
+    const text2 = text === mc.text ? mc.text2 : tuneGray(text, [bg])
     const { accent, accentText } = pickAccent(bg, theme, mode)
-    return { bg, text: mc.text, text2: mc.text2, accent, accentText }
+    return { bg, text, text2, accent, accentText }
   }
   const sections: SectionColors[] = []
   for (let i = 0; i < n; i++) sections.push(entry(mc.colors[i % k]))

@@ -6,6 +6,8 @@ import {
   ensureContrast,
   hexToHsl,
   hslToHex,
+  sectionColorScheme,
+  sectionTextOn,
   type Mode,
   type PaletteStyle,
 } from '../index'
@@ -87,16 +89,19 @@ describe('ensureContrast', () => {
 })
 
 describe('buildSiteTheme', () => {
-  it('every style/mode combination hits >= 4.5 vs the mode text (12 hues)', () => {
+  it('every style/mode combination hits >= 4.5 vs its section text (12 hues)', () => {
     for (const base of [...SAMPLE_BASES, ...EXTRA_BASES]) {
       for (const style of ALL_STYLES) {
         const theme = buildSiteTheme(base, style, false)
+        // Dark: white text where the hue darkens, black on vivid entries —
+        // the resolved section text must always pass.
         for (const color of theme.dark.colors) {
           expect(
-            contrastRatio(color, '#ffffff'),
+            contrastRatio(color, sectionTextOn(color, 'dark')),
             `${style} dark ${color} (base ${base})`,
           ).toBeGreaterThanOrEqual(4.5)
         }
+        // Light mode is always black-text.
         for (const color of theme.light.colors) {
           expect(
             contrastRatio(color, '#000000'),
@@ -152,9 +157,9 @@ describe('buildSiteTheme', () => {
     expect(hexToHsl(theme.light.text2).l).toBeLessThan(40)
   })
 
-  it('text2 clears 4.5:1 on every cycle background and the surface', () => {
-    // Includes high-luminance hues (yellow/green) whose tuned dark colors sit
-    // right at the white-text 4.5 boundary — the hard cases for a gray.
+  it('resolved section text and text2 clear 4.5:1 on every entry and the surface', () => {
+    // Includes high-luminance hues (yellow/green) — vivid dark entries flip
+    // to black text with their own tuned dark gray.
     const bases = [
       '#8db600', '#eab308', '#22c55e', '#06b6d4', '#1d1da8', '#b91c1c',
       '#7c3aed', '#f472b6', '#0f766e', '#a16207', '#65a30d', '#f97316',
@@ -168,10 +173,16 @@ describe('buildSiteTheme', () => {
         const theme = buildSiteTheme(base, style, false)
         for (const mode of ['dark', 'light'] as Mode[]) {
           const mc = theme[mode]
-          for (const bg of [...mc.colors, mc.surface]) {
+          expect(contrastRatio(mc.text2, mc.surface)).toBeGreaterThanOrEqual(4.5)
+          const scheme = sectionColorScheme(mc.colors.length, theme, mode)
+          for (const entry of [scheme.nav, scheme.footer, ...scheme.sections]) {
             expect(
-              contrastRatio(mc.text2, bg),
-              `text2 ${mc.text2} on ${bg} (${base} ${style} ${mode})`,
+              contrastRatio(entry.text, entry.bg),
+              `text ${entry.text} on ${entry.bg} (${base} ${style} ${mode})`,
+            ).toBeGreaterThanOrEqual(4.5)
+            expect(
+              contrastRatio(entry.text2, entry.bg),
+              `text2 ${entry.text2} on ${entry.bg} (${base} ${style} ${mode})`,
             ).toBeGreaterThanOrEqual(4.5)
           }
         }
@@ -205,16 +216,21 @@ describe('buildSiteTheme', () => {
     expect(red.light.colors[0]).toBe('#ff0000')
   })
 
-  it('dark colors are deep but not near-black; light colors clearly light', () => {
+  it('dark entries are deep jewels or deliberately vivid; light colors clearly light', () => {
     for (const base of SAMPLE_BASES) {
       for (const style of ALL_STYLES) {
         const theme = buildSiteTheme(base, style, false)
         theme.dark.colors.forEach((color, i) => {
           if (i === 0 && theme.defaultMode === 'dark') return // pick preserved
-          if (style === 'monochromatic' && i === 1) return // lightness step
           const { l } = hexToHsl(color)
-          expect(l, `dark ${style} ${color} (base ${base})`).toBeGreaterThanOrEqual(14)
-          expect(l, `dark ${style} ${color} (base ${base})`).toBeLessThanOrEqual(40)
+          if (sectionTextOn(color, 'dark') === '#ffffff') {
+            // Jewel dark: genuinely deep, but never near-black mud.
+            expect(l, `dark ${style} ${color} (base ${base})`).toBeGreaterThanOrEqual(8)
+            expect(l, `dark ${style} ${color} (base ${base})`).toBeLessThanOrEqual(62)
+          } else {
+            // Vivid (yellow-band) entry: clearly bright, black text.
+            expect(l, `vivid ${style} ${color} (base ${base})`).toBeGreaterThanOrEqual(50)
+          }
         })
         theme.light.colors.forEach((color, i) => {
           if (i === 0 && theme.defaultMode === 'light') return
