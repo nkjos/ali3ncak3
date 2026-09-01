@@ -47,17 +47,19 @@
   text-decoration: none;
   font-weight: 600;
   font-size: 0.95rem;
-  opacity: 0.8;
+  /* Inactive links use text2 (contrast-guaranteed by the engine) instead of
+     an opacity dim, which could push tuned-to-4.5 text below AA. */
+  color: var(--section-text2);
   padding: var(--space-1) var(--space-2);
   border-bottom: 2px solid transparent;
 }
 
 .site-nav__link:hover {
-  opacity: 1;
+  color: var(--section-text);
 }
 
 .site-nav__link--active {
-  opacity: 1;
+  color: var(--section-text);
   border-bottom-color: var(--section-accent);
 }
 

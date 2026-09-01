@@ -4,7 +4,7 @@
 // Guard: signed out -> sign-in screen; signed in but not allowlisted ->
 // redirect home.
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import PaletteDesigner from '../palette/PaletteDesigner'
 import { signOut, useAuth } from './auth'
@@ -26,6 +26,14 @@ const TABS: { id: TabId; label: string }[] = [
 export default function AdminPage() {
   const { email, isAdmin } = useAuth()
   const [tab, setTab] = useState<TabId>('layout')
+
+  // A signed-in email that is no longer allowlisted (e.g. a removed co-owner)
+  // is signed out rather than redirected forever — otherwise that browser
+  // could never reach the sign-in screen again to switch accounts.
+  const staleSession = email !== null && !isAdmin
+  useEffect(() => {
+    if (staleSession) signOut()
+  }, [staleSession])
 
   if (email === null) return <SignIn />
   if (!isAdmin) return <Navigate to="/" replace />

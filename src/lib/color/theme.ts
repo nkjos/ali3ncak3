@@ -65,6 +65,33 @@ function monoSecond(first: string, mode: Mode, text: string): string {
   return ensureContrast(hslToHex({ h, s, l: Math.min(98, l + 8) }), text)
 }
 
+// Preferred muted secondary-text grays; tuneText2 nudges them toward the
+// mode's text pole until they pass CONTRAST_TARGET on every background.
+const TEXT2_DARK_START: Hsl = { h: 225, s: 14, l: 81 } // ≈ #c7cad6
+const TEXT2_LIGHT_START: Hsl = { h: 240, s: 5, l: 26 } // ≈ #3f3f46
+
+/**
+ * Secondary text color for a mode: starts from the preferred gray and moves
+ * its lightness toward the mode's text pole (white in dark, black in light)
+ * until it reaches `target` contrast against EVERY given background. The
+ * backgrounds themselves are tuned to pass vs pure white/black, so the loop
+ * always converges (worst case: text2 == the neutral pole).
+ */
+function tuneText2(mode: Mode, backgrounds: string[], target = CONTRAST_TARGET): string {
+  const { h, s, l: startL } = mode === 'dark' ? TEXT2_DARK_START : TEXT2_LIGHT_START
+  const towardWhite = mode === 'dark'
+  let l = startL
+  let out = hslToHex({ h, s, l })
+  const passes = (hex: string) => backgrounds.every((bg) => contrastRatio(hex, bg) >= target)
+  while (!passes(out)) {
+    const bound = towardWhite ? 100 : 0
+    if (l === bound) return towardWhite ? '#ffffff' : '#000000'
+    l = towardWhite ? Math.min(bound, l + 1) : Math.max(bound, l - 1)
+    out = hslToHex({ h, s, l })
+  }
+  return out
+}
+
 function buildModeColors(
   mode: Mode,
   baseHsl: Hsl,
@@ -89,13 +116,15 @@ function buildModeColors(
     colors.push(monoSecond(colors[0], mode, text))
   }
 
+  const surface = mode === 'dark' ? '#101018' : '#ffffff'
   const mc: ModeColors = {
     colors,
     primary: colors[0],
     secondary: colors[1],
     text,
-    text2: mode === 'dark' ? '#c7cad6' : '#3f3f46',
-    surface: mode === 'dark' ? '#101018' : '#ffffff',
+    // Guaranteed >= 4.5 on every cycle background AND the surface.
+    text2: tuneText2(mode, [...colors, surface]),
+    surface,
     surfaceText: text,
   }
   if (colors.length > 2) mc.tertiary = colors[2]

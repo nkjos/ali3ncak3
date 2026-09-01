@@ -21,6 +21,7 @@ import {
   useModePreference,
   useSiteThemeValue,
 } from '../content/store'
+import { buildSiteTheme } from '../lib/color'
 import { DEFAULT_THEME } from './defaultTheme'
 
 interface ThemeContextValue {
@@ -46,7 +47,16 @@ function systemMode(): Mode {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const applied = useSiteThemeValue()
-  const theme = applied ?? DEFAULT_THEME
+  // Re-derive the rendered theme from the stored parameters so themes applied
+  // before an engine improvement (e.g. contrast tuning) pick it up too; the
+  // stored SiteTheme remains the durable record of the admin's choice.
+  const theme = useMemo(
+    () =>
+      applied
+        ? buildSiteTheme(applied.baseHex, applied.style, applied.neutralAccent)
+        : DEFAULT_THEME,
+    [applied],
+  )
   const pref = useModePreference()
   const mode: Mode = pref ?? theme.defaultMode ?? systemMode()
   const modeColors = theme[mode]

@@ -142,13 +142,41 @@ describe('buildSiteTheme', () => {
   it('sets the fixed neutrals per mode', () => {
     const theme = buildSiteTheme('#4f46e5', 'complementary', false)
     expect(theme.dark.text).toBe('#ffffff')
-    expect(theme.dark.text2).toBe('#c7cad6')
     expect(theme.dark.surface).toBe('#101018')
     expect(theme.dark.surfaceText).toBe('#ffffff')
     expect(theme.light.text).toBe('#000000')
-    expect(theme.light.text2).toBe('#3f3f46')
     expect(theme.light.surface).toBe('#ffffff')
     expect(theme.light.surfaceText).toBe('#000000')
+    // text2 stays gray, on the correct side of mid for each mode.
+    expect(hexToHsl(theme.dark.text2).l).toBeGreaterThan(60)
+    expect(hexToHsl(theme.light.text2).l).toBeLessThan(40)
+  })
+
+  it('text2 clears 4.5:1 on every cycle background and the surface', () => {
+    // Includes high-luminance hues (yellow/green) whose tuned dark colors sit
+    // right at the white-text 4.5 boundary — the hard cases for a gray.
+    const bases = [
+      '#8db600', '#eab308', '#22c55e', '#06b6d4', '#1d1da8', '#b91c1c',
+      '#7c3aed', '#f472b6', '#0f766e', '#a16207', '#65a30d', '#f97316',
+    ]
+    const styles = [
+      'monochromatic', 'analogous', 'complementary', 'split-complementary',
+      'triadic', 'tetradic', 'square',
+    ] as const
+    for (const base of bases) {
+      for (const style of styles) {
+        const theme = buildSiteTheme(base, style, false)
+        for (const mode of ['dark', 'light'] as Mode[]) {
+          const mc = theme[mode]
+          for (const bg of [...mc.colors, mc.surface]) {
+            expect(
+              contrastRatio(mc.text2, bg),
+              `text2 ${mc.text2} on ${bg} (${base} ${style} ${mode})`,
+            ).toBeGreaterThanOrEqual(4.5)
+          }
+        }
+      }
+    }
   })
 
   it('records baseHex, style, and neutralAccent', () => {

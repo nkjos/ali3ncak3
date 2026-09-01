@@ -76,39 +76,79 @@ export default function PaletteDesigner() {
   // Persist the pick as the user works (debounced so wheel drags don't spam
   // storage), fulfilling "routing back prefills wheel/slider/hex".
   const persistTimer = useRef<number | undefined>(undefined)
+  const latestHexRef = useRef(hex)
+  latestHexRef.current = hex
   useEffect(() => {
     window.clearTimeout(persistTimer.current)
     persistTimer.current = window.setTimeout(() => {
+      persistTimer.current = undefined
       const ws = getPaletteWorkspace()
       if (ws.lastPickHex !== hex) savePaletteWorkspace({ ...ws, lastPickHex: hex })
     }, 250)
     return () => window.clearTimeout(persistTimer.current)
   }, [hex])
+  // Flush a pending debounced save on unmount (tab switch / route change)
+  // instead of dropping the last pick.
+  useEffect(
+    () => () => {
+      if (persistTimer.current === undefined) return
+      window.clearTimeout(persistTimer.current)
+      const ws = getPaletteWorkspace()
+      if (ws.lastPickHex !== latestHexRef.current) {
+        savePaletteWorkspace({ ...ws, lastPickHex: latestHexRef.current })
+      }
+    },
+    [],
+  )
 
   // Hex input: free-typing draft that follows the canonical hex while the
   // field is not focused.
   const [hexDraft, setHexDraft] = useState(hex)
   const hexFocusRef = useRef(false)
+  const hexTypedRef = useRef(false)
+  const hexSelfCommitRef = useRef(false)
   useEffect(() => {
-    if (!hexFocusRef.current) setHexDraft(hex)
+    if (!hexFocusRef.current) {
+      setHexDraft(hex)
+      return
+    }
+    // Canonical changed while the input is focused: unless it was this
+    // input's own live commit, the wheel/slider moved — follow it.
+    if (!hexSelfCommitRef.current) {
+      setHexDraft(hex)
+      hexTypedRef.current = false
+    }
+    hexSelfCommitRef.current = false
   }, [hex])
   const hexDraftValid = safeHsl(hexDraft) !== null
 
   const onHexChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
+    hexTypedRef.current = true
     setHexDraft(value)
     if (FULL_HEX_RE.test(value.trim())) {
       const parsed = safeHsl(value)
-      if (parsed) setHsl(parsed)
+      if (parsed) {
+        if (hslToHex(parsed) !== hex) hexSelfCommitRef.current = true
+        setHsl(parsed)
+      }
     }
   }
 
   const onHexFocus = () => {
     hexFocusRef.current = true
+    hexTypedRef.current = false
   }
 
   const onHexBlur = (e: FocusEvent<HTMLInputElement>) => {
     hexFocusRef.current = false
+    // Only commit text the user actually typed since focusing; otherwise the
+    // stale draft would silently revert a wheel/slider pick made while the
+    // field kept focus (wheel pointerdown prevents default focus transfer).
+    if (!hexTypedRef.current) {
+      setHexDraft(hex)
+      return
+    }
     const parsed = safeHsl(e.target.value)
     if (parsed) {
       setHsl(parsed)

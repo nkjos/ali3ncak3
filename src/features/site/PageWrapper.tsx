@@ -26,7 +26,9 @@ export function usePageColorScheme(): SectionColorScheme | null {
 }
 
 function routePageId(pathname: string): PageId | null {
-  const path = pathname.replace(/\/+$/, '') || '/'
+  // Lowercased to match react-router's own case-insensitive route matching
+  // (/Store renders StorePage, so it must get StorePage's cycle counts).
+  const path = pathname.toLowerCase().replace(/\/+$/, '') || '/'
   if (path === '/') return 'home'
   if (path === '/store') return 'store'
   return null // non-content routes (e.g. /admin) -> 0 sections

@@ -204,6 +204,12 @@
   color: #e5484d;
 }
 
+/* Darker invalid-state red for the near-white light-mode panel (AA). */
+html[data-mode='light'] .pd-hex-input.is-invalid {
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+
 /* Lightness slider */
 
 .pd-slider {

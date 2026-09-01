@@ -10,7 +10,14 @@
   --adm-raise-2: color-mix(in srgb, var(--c-surface-text) 9%, var(--c-surface));
   --adm-muted: var(--c-text2);
   --adm-danger: #ef4444;
+  --adm-success: #22c55e;
   color: var(--c-surface-text);
+}
+
+/* Darker status variants for the white light-mode surface (AA at small sizes). */
+html[data-mode='light'] .admin {
+  --adm-danger: #b91c1c;
+  --adm-success: #15803d;
 }
 
 .admin {
@@ -86,7 +93,9 @@
 
 .admin-tab.is-active {
   color: var(--c-surface-text);
-  border-bottom-color: var(--c-primary);
+  /* Surface-text mix: visible on the surface for every palette (--c-primary
+     shares the surface's lightness band by construction). */
+  border-bottom-color: color-mix(in srgb, var(--c-surface-text) 80%, transparent);
 }
 
 .admin-panel {
@@ -185,7 +194,9 @@
 .admin-btn:focus-visible,
 .admin-tab:focus-visible,
 .admin-switch:focus-visible {
-  outline: 2px solid var(--c-primary);
+  /* Surface-text keeps the ring >= 3:1 on the surface for every palette;
+     --c-primary sits in the surface's own lightness band and can vanish. */
+  outline: 2px solid color-mix(in srgb, var(--c-surface-text) 70%, transparent);
   outline-offset: 1px;
 }
 
@@ -494,7 +505,7 @@
 
 .admin-success {
   margin: 0;
-  color: #22c55e;
+  color: var(--adm-success);
   font-size: 0.85rem;
   font-weight: 600;
 }
