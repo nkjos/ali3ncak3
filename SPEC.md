@@ -421,3 +421,12 @@ by name / Footer, disabled when Off) — plus a live "x of P Home slots" hint.
 Choices are remembered per style in `PaletteWorkspace.cycleByStyle` and
 saved into the theme on Apply; `ThemeProvider` passes the stored cycle
 through `buildSiteTheme(base, style, neutralAccent, cycle)`.
+
+## Mode default (changed 2026-09-13)
+
+The site defaults to DARK mode for every visitor; only the visitor's own
+navbar toggle (persisted per browser) overrides it. Applying a palette no
+longer changes the mode preference; the palette designer's "Native mode"
+readout is informational (which mode the picked color naturally suits).
+Admin tab order: Palette, Products, Designer, Layout, Settings (opens on
+Palette).

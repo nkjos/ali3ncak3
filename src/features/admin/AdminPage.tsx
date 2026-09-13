@@ -18,16 +18,16 @@ import './admin.css'
 type TabId = 'layout' | 'palette' | 'products' | 'designer' | 'settings'
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'layout', label: 'Layout' },
   { id: 'palette', label: 'Palette' },
   { id: 'products', label: 'Products' },
   { id: 'designer', label: 'Designer' },
+  { id: 'layout', label: 'Layout' },
   { id: 'settings', label: 'Settings' },
 ]
 
 export default function AdminPage() {
   const { email, isAdmin } = useAuth()
-  const [tab, setTab] = useState<TabId>('layout')
+  const [tab, setTab] = useState<TabId>('palette')
 
   // A signed-in email that is no longer allowlisted (e.g. a removed co-owner)
   // is signed out rather than redirected forever — otherwise that browser

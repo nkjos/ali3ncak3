@@ -244,7 +244,7 @@ export function MiniSitePreview({
 }) {
   const scheme = sectionColorScheme(sectionTypes.length, theme, mode)
   const mc = theme[mode]
-  const isDefault = theme.defaultMode === mode
+  const isDefault = mode === 'dark' // dark is the site default
   return (
     <figure className="pd-preview">
       <div className="pd-preview-screen" style={{ background: mc.surface }}>

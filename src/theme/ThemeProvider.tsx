@@ -1,5 +1,5 @@
 // Site-wide theme context: resolves the active SiteTheme (applied palette or
-// DEFAULT_THEME), the active mode (visitor toggle > theme default > system),
+// DEFAULT_THEME), the active mode (visitor toggle > dark default),
 // and mirrors the active ModeColors onto CSS custom properties.
 //
 // CSS variables set on <html> (use these in stylesheets):
@@ -35,16 +35,6 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
-function systemMode(): Mode {
-  if (
-    typeof window !== 'undefined' &&
-    window.matchMedia?.('(prefers-color-scheme: light)').matches
-  ) {
-    return 'light'
-  }
-  return 'dark'
-}
-
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const applied = useSiteThemeValue()
   // Re-derive the rendered theme from the stored parameters so themes applied
@@ -61,7 +51,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     [applied],
   )
   const pref = useModePreference()
-  const mode: Mode = pref ?? theme.defaultMode ?? systemMode()
+  // Dark is the site default; only the visitor's own toggle overrides it.
+  const mode: Mode = pref ?? 'dark'
   const modeColors = theme[mode]
 
   const setMode = useCallback((m: Mode) => saveModePreference(m), [])

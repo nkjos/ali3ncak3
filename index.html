@@ -7,20 +7,13 @@
     <title>ali3ncak3</title>
     <script>
       // Pre-paint mode resolution so light-mode visitors don't get a dark
-      // flash: visitor toggle > applied theme default > system preference.
+      // flash: visitor toggle > dark (the site default).
       // ThemeProvider re-applies the full variable set on mount.
       ;(function () {
         try {
           var mode = JSON.parse(localStorage.getItem('ac3:modePref') || 'null')
           var theme = JSON.parse(localStorage.getItem('ac3:theme') || 'null')
-          if (mode !== 'light' && mode !== 'dark') {
-            mode = theme && theme.defaultMode
-          }
-          if (mode !== 'light' && mode !== 'dark') {
-            mode = window.matchMedia('(prefers-color-scheme: light)').matches
-              ? 'light'
-              : 'dark'
-          }
+          if (mode !== 'light' && mode !== 'dark') mode = 'dark'
           var root = document.documentElement
           root.dataset.mode = mode
           var mc = theme && theme[mode]

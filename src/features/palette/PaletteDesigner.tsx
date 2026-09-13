@@ -26,7 +26,6 @@ import {
 import {
   getPaletteWorkspace,
   getSiteTheme,
-  saveModePreference,
   savePaletteWorkspace,
   saveSiteTheme,
   useLayout,
@@ -215,7 +214,6 @@ export default function PaletteDesigner() {
   const applyStyle = (style: PaletteStyle) => {
     const theme = buildSiteTheme(hex, style, neutralAccent, cycleFor(style))
     saveSiteTheme(theme)
-    saveModePreference(theme.defaultMode)
     const ws = getPaletteWorkspace()
     const lower = theme.baseHex.toLowerCase()
     savePaletteWorkspace({
@@ -379,7 +377,7 @@ export default function PaletteDesigner() {
               </dd>
             </div>
             <div className="pd-fact">
-              <dt>Default site mode</dt>
+              <dt>Native mode</dt>
               <dd>
                 <span
                   className="pd-fact-dot"
