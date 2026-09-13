@@ -41,6 +41,15 @@ export interface SiteTheme {
   neutralAccent: boolean
   /** Mode determined from the picked color's contrast (white text wins ⇒ dark). */
   defaultMode: Mode
+  /**
+   * Neutral (surface black/white) slots woven into the section color cycle.
+   * frequency = neutral slots per palette cycle (0 = off, k = every other
+   * color; quarters allowed); offset = page position of the first neutral
+   * slot (0 = navbar, 1 = first section, …). Absent on themes stored before
+   * this feature ⇒ treated as 0/0.
+   */
+  neutralFrequency?: number
+  neutralOffset?: number
   light: ModeColors
   dark: ModeColors
 }
@@ -85,9 +94,16 @@ export interface SiteSettings {
   coOwnerEmail: string | null
 }
 
+export interface NeutralCycle {
+  frequency: number
+  offset: number
+}
+
 export interface PaletteWorkspace {
   /** Prefills the wheel when routing back to the palette screen. */
   lastPickHex: string | null
   /** Most-recent-first list of previously applied/picked primary colors. */
   history: string[]
+  /** Per-style neutral-cycle choices so routing back keeps each card's selects. */
+  cycleByStyle?: Partial<Record<PaletteStyle, NeutralCycle>>
 }

@@ -12,8 +12,9 @@ import type {
   KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent,
 } from 'react'
-import type { Hsl, PaletteStyle } from '../../lib/color'
+import type { Hsl, NeutralCycle, PaletteStyle } from '../../lib/color'
 import {
+  NO_NEUTRAL_CYCLE,
   PALETTE_STYLES,
   bestTextOn,
   buildSiteTheme,
@@ -62,6 +63,30 @@ export default function PaletteDesigner() {
   const [neutralAccent, setNeutralAccent] = useState<boolean>(
     () => getSiteTheme()?.neutralAccent ?? false,
   )
+  // Each style card remembers its own black/white-slot settings; the applied
+  // theme's style seeds its card so the live site is reflected on arrival.
+  const [cycleByStyle, setCycleByStyle] = useState<
+    Partial<Record<PaletteStyle, NeutralCycle>>
+  >(() => {
+    const remembered = { ...(getPaletteWorkspace().cycleByStyle ?? {}) }
+    const applied = getSiteTheme()
+    if (applied) {
+      remembered[applied.style] = {
+        frequency: applied.neutralFrequency ?? 0,
+        offset: applied.neutralOffset ?? 0,
+      }
+    }
+    return remembered
+  })
+  const cycleFor = (style: PaletteStyle): NeutralCycle =>
+    cycleByStyle[style] ?? NO_NEUTRAL_CYCLE
+  const setCycleFor = (style: PaletteStyle, cycle: NeutralCycle) => {
+    setCycleByStyle((prev) => {
+      const next = { ...prev, [style]: cycle }
+      savePaletteWorkspace({ ...getPaletteWorkspace(), cycleByStyle: next })
+      return next
+    })
+  }
 
   const hex = useMemo(() => hslToHex(hsl), [hsl])
 
@@ -169,8 +194,11 @@ export default function PaletteDesigner() {
 
   // One built theme per palette style, all from the same base + accent flag.
   const themes = useMemo(
-    () => PALETTE_STYLES.map((def) => buildSiteTheme(hex, def.id, neutralAccent)),
-    [hex, neutralAccent],
+    () =>
+      PALETTE_STYLES.map((def) =>
+        buildSiteTheme(hex, def.id, neutralAccent, cycleByStyle[def.id] ?? NO_NEUTRAL_CYCLE),
+      ),
+    [hex, neutralAccent, cycleByStyle],
   )
 
   // Which card (if any) exactly matches the live site theme.
@@ -178,18 +206,23 @@ export default function PaletteDesigner() {
     if (!appliedTheme) return null
     if (appliedTheme.baseHex.toLowerCase() !== hex.toLowerCase()) return null
     if (appliedTheme.neutralAccent !== neutralAccent) return null
+    const cycle = cycleByStyle[appliedTheme.style] ?? NO_NEUTRAL_CYCLE
+    if ((appliedTheme.neutralFrequency ?? 0) !== cycle.frequency) return null
+    if ((appliedTheme.neutralOffset ?? 0) !== cycle.offset) return null
     return appliedTheme.style
-  }, [appliedTheme, hex, neutralAccent])
+  }, [appliedTheme, hex, neutralAccent, cycleByStyle])
 
   const applyStyle = (style: PaletteStyle) => {
-    const theme = buildSiteTheme(hex, style, neutralAccent)
+    const theme = buildSiteTheme(hex, style, neutralAccent, cycleFor(style))
     saveSiteTheme(theme)
     saveModePreference(theme.defaultMode)
     const ws = getPaletteWorkspace()
     const lower = theme.baseHex.toLowerCase()
     savePaletteWorkspace({
+      ...ws,
       lastPickHex: theme.baseHex,
       history: [theme.baseHex, ...ws.history.filter((c) => c.toLowerCase() !== lower)],
+      cycleByStyle,
     })
   }
 
@@ -420,6 +453,8 @@ export default function PaletteDesigner() {
               theme={themes[i]}
               applied={appliedStyleId === def.id}
               sectionTypes={sectionTypes}
+              cycle={cycleFor(def.id)}
+              onCycleChange={(cycle) => setCycleFor(def.id, cycle)}
               onApply={() => applyStyle(def.id)}
             />
           ))}

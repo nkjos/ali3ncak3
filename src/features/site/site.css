@@ -273,6 +273,8 @@
 
 /* Cards use the mode surface tokens (spec contract). */
 .product-card {
+  /* Keeps cards visible on neutral (surface-colored) sections. */
+  border: 1px solid color-mix(in srgb, var(--section-text) 14%, transparent);
   background: var(--c-surface);
   color: var(--c-surface-text);
   border-radius: var(--radius-md);

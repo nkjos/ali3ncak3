@@ -936,3 +936,62 @@ html[data-mode='light'] .pd-hex-input.is-invalid {
 .pd-btn-danger:hover {
   background: #d93a40;
 }
+
+/* Per-card neutral (black/white) slot controls */
+
+.pd-cycle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+  padding: 10px 12px;
+  margin: 2px 0 12px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--pd-ink, var(--c-surface-text)) 5%, transparent);
+}
+
+.pd-cycle-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pd-cycle-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--c-text2);
+}
+
+.pd-select {
+  appearance: none;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 6px 28px 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--c-surface-text) 22%, transparent);
+  background: var(--c-surface)
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5'/></svg>")
+    no-repeat right 10px center;
+  color: var(--c-surface-text);
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.pd-select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.pd-select:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--c-surface-text) 70%, transparent);
+  outline-offset: 1px;
+}
+
+.pd-cycle-hint {
+  flex: 1 1 100%;
+  font-size: 0.78rem;
+  color: var(--c-text2);
+}

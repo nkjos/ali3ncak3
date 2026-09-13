@@ -53,7 +53,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const theme = useMemo(
     () =>
       applied
-        ? buildSiteTheme(applied.baseHex, applied.style, applied.neutralAccent)
+        ? buildSiteTheme(applied.baseHex, applied.style, applied.neutralAccent, {
+            frequency: applied.neutralFrequency ?? 0,
+            offset: applied.neutralOffset ?? 0,
+          })
         : DEFAULT_THEME,
     [applied],
   )

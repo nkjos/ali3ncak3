@@ -392,3 +392,32 @@ z-order always matches list order.
 Styling: co-located `designer.css`, admin-dashboard look via `--c-surface`
 / `--c-surface-text` (+ color-mix like admin.css), both modes, responsive
 (stage stacks above controls on narrow screens, no horizontal page scroll).
+
+## Neutral slots in the color cycle (added 2026-09-13)
+
+`SiteTheme.neutralFrequency` (0 = off) and `SiteTheme.neutralOffset` weave
+the mode neutral (the surface: near-black in dark, white in light, with the
+mode text) into the section cycle. Page positions are 0 = navbar,
+1..n = sections, n+1 = footer. With k palette colors and frequency f
+(neutral slots per k-color cycle, quarters allowed, clamped to k):
+
+- density d = f / (k + f); position q is neutral when
+  floor((q − offset)·d) ≠ floor((q − offset − 1)·d) — an even Bresenham
+  spread, so k=3, f=2, offset 0 gives `N c c N c | N c c N c …`, f=k is
+  every other slot, f=1 is once per k+1 slots, f=0.5 once per two cycles.
+- palette colors keep advancing in order across NON-neutral positions, so
+  inserting neutrals never scrambles the palette sequence; with f=0 the
+  mapping is exactly the original (nav = colors[k−1], sections i%k,
+  footer n%k).
+- `sectionTextOn(surface)` gives the neutral slot's text; accents still come
+  from `pickAccent` (the brightest other-mode variant on black, deepest on
+  white); product cards carry a faint border so they stay visible on
+  surface-colored sections.
+
+Palette designer: each style card has two selects under its description —
+"Black/white slots" (Off, nice quarter steps from ~once-per-Home-page up to
+"Every other slot" = k) and "Starts at" (Navbar / each enabled Home section
+by name / Footer, disabled when Off) — plus a live "x of P Home slots" hint.
+Choices are remembered per style in `PaletteWorkspace.cycleByStyle` and
+saved into the theme on Apply; `ThemeProvider` passes the stored cycle
+through `buildSiteTheme(base, style, neutralAccent, cycle)`.

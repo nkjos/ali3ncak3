@@ -21,10 +21,16 @@ export {
   pickAccent,
   sectionColorScheme,
   sectionTextOn,
+  NO_NEUTRAL_CYCLE,
+  themeNeutralCycle,
+  effectiveNeutralFrequency,
+  isNeutralPosition,
+  paletteIndexAt,
+  neutralSlotCount,
 } from './theme'
 
 export type { Oklch } from './oklch'
 export { hexToOklch, oklchToHex, maxChroma, cuspLightness } from './oklch'
 
 // Convenience re-exports of the shared model types used in signatures.
-export type { Mode, ModeColors, PaletteStyle, SiteTheme } from '../../content/types'
+export type { Mode, ModeColors, NeutralCycle, PaletteStyle, SiteTheme } from '../../content/types'

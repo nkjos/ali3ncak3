@@ -1,7 +1,7 @@
 // Theme building: contrast tuning, SiteTheme construction, accent picking,
 // and the section background cycle.
 
-import type { Mode, ModeColors, PaletteStyle, SiteTheme } from '../../content/types'
+import type { Mode, ModeColors, NeutralCycle, PaletteStyle, SiteTheme } from '../../content/types'
 import { clamp, hexToHsl, hslToHex, type Hsl } from './convert'
 import { bestTextOn, contrastRatio, detectModeForBase, relativeLuminance } from './wcag'
 import { generateHues } from './styles'
@@ -239,6 +239,7 @@ export function buildSiteTheme(
   baseHex: string,
   style: PaletteStyle,
   neutralAccent: boolean,
+  cycle: NeutralCycle = NO_NEUTRAL_CYCLE,
 ): SiteTheme {
   const baseHsl = hexToHsl(baseHex)
   const normalizedBase = hslToHex(baseHsl)
@@ -249,6 +250,8 @@ export function buildSiteTheme(
     baseHex: normalizedBase,
     neutralAccent,
     defaultMode,
+    neutralFrequency: cycle.frequency,
+    neutralOffset: cycle.offset,
     dark: buildModeColors('dark', baseHsl, hues, style, defaultMode),
     light: buildModeColors('light', baseHsl, hues, style, defaultMode),
   }
@@ -320,11 +323,69 @@ export interface SectionColorScheme {
   sections: SectionColors[]
 }
 
+// --- Neutral slots in the cycle ------------------------------------------
+// Page positions: 0 = navbar, 1..n = sections, n+1 = footer. With frequency
+// f (neutral slots per k-color palette cycle) the neutral density is
+// d = f/(k+f); slots are spread evenly with a Bresenham-style rule, so
+// k=3, f=2 gives N c c N c | N c c N c … (positions 0 and 3 of each 5-cycle)
+// and f=k gives every other slot. Palette colors keep cycling in order
+// across the NON-neutral positions, so inserting neutrals never scrambles
+// the palette sequence. Everything is integer arithmetic on quarters, so
+// fractional frequencies are exact.
+
+export const NO_NEUTRAL_CYCLE: NeutralCycle = { frequency: 0, offset: 0 }
+
+export function themeNeutralCycle(theme: SiteTheme): NeutralCycle {
+  return {
+    frequency: theme.neutralFrequency ?? 0,
+    offset: theme.neutralOffset ?? 0,
+  }
+}
+
+/** Effective frequency: clamped to [0, k] and snapped to quarters. */
+export function effectiveNeutralFrequency(k: number, frequency: number): number {
+  if (!Number.isFinite(frequency) || frequency <= 0) return 0
+  return Math.min(k, Math.round(frequency * 4) / 4)
+}
+
+/** Whether page position q is a neutral (surface black/white) slot. */
+export function isNeutralPosition(q: number, k: number, cycle: NeutralCycle): boolean {
+  const f = effectiveNeutralFrequency(k, cycle.frequency)
+  if (f === 0) return false
+  // d = f/(k+f) as an exact ratio of integers (quarters).
+  const num = Math.round(f * 4)
+  const den = Math.round((k + f) * 4)
+  const p = q - Math.round(cycle.offset)
+  return Math.floor((p * num) / den) !== Math.floor(((p - 1) * num) / den)
+}
+
+/** Palette index (0..k-1) painted at a non-neutral page position q. */
+export function paletteIndexAt(q: number, k: number, cycle: NeutralCycle): number {
+  // Signed count of non-neutral positions between position 1 and q, so with
+  // no neutrals: section i (q=i+1) -> i, navbar (q=0) -> k-1, footer -> n%k.
+  let count = 0
+  if (q >= 1) {
+    for (let i = 1; i < q; i++) if (!isNeutralPosition(i, k, cycle)) count++
+  } else {
+    for (let i = q; i <= 0; i++) if (!isNeutralPosition(i, k, cycle)) count--
+  }
+  return ((count % k) + k) % k
+}
+
+/** How many of `positions` page slots (navbar + sections + footer) are neutral. */
+export function neutralSlotCount(positions: number, k: number, cycle: NeutralCycle): number {
+  let n = 0
+  for (let q = 0; q < positions; q++) if (isNeutralPosition(q, k, cycle)) n++
+  return n
+}
+
 /**
- * Section background cycling. k = cycle length:
+ * Section background cycling over page positions 0 = navbar, 1..n = sections,
+ * n+1 = footer. Without neutral slots this is exactly:
  *   sections[i].bg = colors[i % k]
  *   nav.bg         = colors[(k - 1) % k]  (the color "before" section 0)
  *   footer.bg      = colors[n % k]        (continues after the last section)
+ * Neutral slots paint the mode surface (near-black / white) with its text.
  */
 export function sectionColorScheme(
   visibleSectionCount: number,
@@ -334,6 +395,7 @@ export function sectionColorScheme(
   const mc = theme[mode]
   const k = mc.colors.length
   const n = Math.max(0, Math.floor(visibleSectionCount))
+  const cycle = themeNeutralCycle(theme)
   const entry = (bg: string): SectionColors => {
     // Canonical mode text where it passes; vivid (flipped) sections get the
     // opposite neutral and a gray tuned against their own background.
@@ -342,11 +404,13 @@ export function sectionColorScheme(
     const { accent, accentText } = pickAccent(bg, theme, mode)
     return { bg, text, text2, accent, accentText }
   }
+  const at = (q: number): SectionColors =>
+    entry(
+      isNeutralPosition(q, k, cycle)
+        ? mc.surface
+        : mc.colors[paletteIndexAt(q, k, cycle)],
+    )
   const sections: SectionColors[] = []
-  for (let i = 0; i < n; i++) sections.push(entry(mc.colors[i % k]))
-  return {
-    nav: entry(mc.colors[(k - 1) % k]),
-    footer: entry(mc.colors[n % k]),
-    sections,
-  }
+  for (let i = 0; i < n; i++) sections.push(at(i + 1))
+  return { nav: at(0), footer: at(n + 1), sections }
 }
