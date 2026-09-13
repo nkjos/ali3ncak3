@@ -35,7 +35,15 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
 
   return (
     <article className="product-card" style={{ '--card-tint': tint } as CSSProperties}>
-      <div className="product-card__img" aria-hidden="true" />
+      {product.imageDataUrl ? (
+        <img
+          className="product-card__img product-card__img--photo"
+          src={product.imageDataUrl}
+          alt={product.title}
+        />
+      ) : (
+        <div className="product-card__img" aria-hidden="true" />
+      )}
       <div className="product-card__row">
         <h3 className="product-card__title">{product.title}</h3>
         <span className="product-card__price">{formatPrice(product.priceCents)}</span>

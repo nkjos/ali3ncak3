@@ -113,6 +113,13 @@ export default function ProductsTab() {
       <div className="admin-products">
         {products.map((p) => (
           <article key={p.id} className="admin-card admin-product">
+            {p.imageDataUrl && (
+              <img
+                className="admin-product-thumb"
+                src={p.imageDataUrl}
+                alt={`${p.title} image`}
+              />
+            )}
             <label className="admin-field">
               <span>Title</span>
               <input

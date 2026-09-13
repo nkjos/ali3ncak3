@@ -76,6 +76,9 @@ export interface Product {
   stock: number
   published: boolean
   promoted: boolean
+  /** Optional product image (data URL — stored in the browser until a
+   *  backend exists; composed in the admin Designer tab). */
+  imageDataUrl?: string
 }
 
 export interface SiteSettings {

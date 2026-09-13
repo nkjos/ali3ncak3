@@ -587,3 +587,14 @@ html[data-mode='light'] .admin {
   font-size: 0.75rem;
   line-height: 1.5;
 }
+
+/* ---- Product image thumbnails (from the Designer tab) ---------------- */
+
+.admin-product-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--adm-line-soft);
+  margin-bottom: var(--space-2);
+}

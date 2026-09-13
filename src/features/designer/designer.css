@@ -1,0 +1,472 @@
+/* Designer tab — overlay studio. Matches the admin dashboard vocabulary:
+   surface tokens + the --adm-* derived shades from admin.css (this tab
+   always renders inside .admin, so those vars are inherited and both color
+   modes come for free). Interactive surfaces set touch-action:none so
+   gestures never scroll the page. */
+
+.dz-root {
+  display: block;
+}
+
+.dz-blurb {
+  margin: 0;
+  color: var(--adm-muted);
+  font-size: 0.9rem;
+  max-width: 52ch;
+}
+
+.dz-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.dz-status {
+  margin: 0 0 var(--space-3);
+}
+
+/* ---- Two-column layout (stage left, controls right; stacks < 840px) --- */
+
+.dz-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 840px) {
+  .dz-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.dz-stage-col,
+.dz-side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ---- Transparency checkerboard --------------------------------------- */
+
+.dz-checker {
+  background-color: color-mix(in srgb, var(--c-surface-text) 5%, var(--c-surface));
+  background-image: repeating-conic-gradient(
+    color-mix(in srgb, var(--c-surface-text) 9%, transparent) 0% 25%,
+    transparent 0% 50%
+  );
+  background-size: 16px 16px;
+}
+
+/* ---- Stage ------------------------------------------------------------ */
+
+.dz-stage-frame {
+  border: 1px solid var(--adm-line-soft);
+  background: var(--adm-raise);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.dz-stage {
+  position: relative;
+  max-width: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dz-stage:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--c-surface-text) 70%, transparent);
+  outline-offset: 3px;
+}
+
+.dz-stage-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.dz-base {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dz-layer {
+  position: absolute;
+  max-width: none; /* index.css sets img { max-width: 100% } */
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.dz-layer:active {
+  cursor: grabbing;
+}
+
+/* ---- Selection outline + handles -------------------------------------- */
+
+.dz-select {
+  position: absolute;
+  pointer-events: none;
+  border: 1.5px dashed color-mix(in srgb, var(--c-surface-text) 85%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-surface) 60%, transparent);
+}
+
+.dz-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--c-surface);
+  border: 2px solid var(--c-surface-text);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.dz-handle-nw { left: -8px; top: -8px; cursor: nwse-resize; }
+.dz-handle-ne { right: -8px; top: -8px; cursor: nesw-resize; }
+.dz-handle-sw { left: -8px; bottom: -8px; cursor: nesw-resize; }
+.dz-handle-se { right: -8px; bottom: -8px; cursor: nwse-resize; }
+
+.dz-rotate {
+  position: absolute;
+  left: 50%;
+  top: -32px;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--c-surface);
+  border: 2px solid var(--c-surface-text);
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+}
+
+.dz-rotate-stem {
+  position: absolute;
+  left: 50%;
+  top: -24px;
+  width: 2px;
+  height: 24px;
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--c-surface-text) 60%, transparent);
+  pointer-events: none;
+}
+
+/* ---- Empty states ------------------------------------------------------ */
+
+.dz-empty-upload {
+  appearance: none;
+  width: 100%;
+  border: 2px dashed var(--adm-line);
+  background: var(--adm-raise);
+  color: var(--c-surface-text);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  font: inherit;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.dz-empty-upload:hover {
+  background: var(--adm-raise-2);
+  border-color: color-mix(in srgb, var(--c-surface-text) 35%, transparent);
+}
+
+.dz-empty-upload:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--c-surface-text) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.dz-empty-plus {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--adm-line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--adm-muted);
+}
+
+.dz-empty-upload strong {
+  font-size: 1.05rem;
+}
+
+.dz-empty-sub {
+  color: var(--adm-muted);
+  font-size: 0.85rem;
+}
+
+.dz-hint {
+  margin: 0;
+  color: var(--adm-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  text-align: center;
+  border: 1px dashed var(--adm-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+/* ---- Side cards -------------------------------------------------------- */
+
+.dz-card {
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dz-note {
+  margin: 0;
+}
+
+.dz-side-empty {
+  margin: 0;
+  color: var(--adm-muted);
+  font-size: 0.85rem;
+}
+
+/* ---- Layer list --------------------------------------------------------- */
+
+.dz-layers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.dz-layer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.dz-layer-pick {
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--adm-line-soft);
+  background: var(--adm-raise);
+  color: var(--c-surface-text);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.dz-layer-pick:hover {
+  background: var(--adm-raise-2);
+}
+
+.dz-layer-pick[aria-current='true'] {
+  border-color: color-mix(in srgb, var(--c-surface-text) 55%, transparent);
+  background: var(--adm-raise-2);
+}
+
+.dz-layer-pick:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--c-surface-text) 70%, transparent);
+  outline-offset: 1px;
+}
+
+.dz-thumb {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  object-fit: contain;
+  border-radius: 4px;
+  border: 1px solid var(--adm-line-soft);
+}
+
+.dz-layer-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Selected-layer controls -------------------------------------------- */
+
+.dz-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dz-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.dz-row-wrap {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.dz-grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.dz-stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.dz-stepper .admin-icon-btn {
+  flex: none;
+}
+
+.dz-num {
+  min-width: 0;
+}
+
+.dz-range {
+  width: 100%;
+  accent-color: var(--c-primary);
+}
+
+.dz-color {
+  width: 44px;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid var(--adm-line);
+  border-radius: var(--radius-sm);
+  background: var(--adm-raise);
+  cursor: pointer;
+}
+
+.dz-color:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ---- Drawing panel ------------------------------------------------------- */
+
+.dz-draw {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dz-draw-canvas {
+  width: 100%;
+  max-width: 512px;
+  border: 1px solid var(--adm-line);
+  border-radius: var(--radius-sm);
+  touch-action: none;
+  cursor: crosshair;
+  display: block;
+}
+
+.dz-draw-tools {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.dz-tool {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dz-tool-grow {
+  flex: 1;
+  min-width: 140px;
+}
+
+.dz-draw-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* ---- Create-product modal ------------------------------------------------ */
+
+.dz-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 8, 14, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+}
+
+.dz-modal {
+  width: 100%;
+  max-width: 460px;
+  max-height: calc(100vh - 2 * var(--space-3));
+  overflow: auto;
+  background: var(--c-surface);
+  color: var(--c-surface-text);
+  border: 1px solid var(--adm-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dz-modal-title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.dz-modal-preview {
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--adm-line-soft);
+}
+
+.dz-modal-note {
+  margin: 0;
+}
+
+.dz-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.dz-field-error {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+}

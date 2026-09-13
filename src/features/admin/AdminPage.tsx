@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import PaletteDesigner from '../palette/PaletteDesigner'
+import DesignerTab from '../designer/DesignerTab'
 import { signOut, useAuth } from './auth'
 import SignIn from './SignIn'
 import LayoutTab from './LayoutTab'
@@ -14,12 +15,13 @@ import ProductsTab from './ProductsTab'
 import SettingsTab from './SettingsTab'
 import './admin.css'
 
-type TabId = 'layout' | 'palette' | 'products' | 'settings'
+type TabId = 'layout' | 'palette' | 'products' | 'designer' | 'settings'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'layout', label: 'Layout' },
   { id: 'palette', label: 'Palette' },
   { id: 'products', label: 'Products' },
+  { id: 'designer', label: 'Designer' },
   { id: 'settings', label: 'Settings' },
 ]
 
@@ -71,6 +73,7 @@ export default function AdminPage() {
         {tab === 'layout' && <LayoutTab />}
         {tab === 'palette' && <PaletteDesigner />}
         {tab === 'products' && <ProductsTab />}
+        {tab === 'designer' && <DesignerTab />}
         {tab === 'settings' && <SettingsTab />}
       </div>
     </div>

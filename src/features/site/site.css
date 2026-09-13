@@ -17,6 +17,11 @@
   background: var(--section-bg);
   color: var(--section-text);
   padding: var(--space-3) var(--space-4);
+  /* Stays visible while scrolling; below overlay dialogs (z-index 60+). */
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  box-shadow: var(--shadow-1);
 }
 
 .site-nav__inner {
@@ -286,6 +291,12 @@
   /* Palette cycle color, alternating per card (set by ProductCard). */
   background: var(--card-tint, var(--c-primary));
   opacity: 0.88;
+}
+
+.product-card__img--photo {
+  object-fit: cover;
+  opacity: 1;
+  background: none;
 }
 
 .product-card__row {

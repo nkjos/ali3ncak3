@@ -292,3 +292,103 @@ Exports (named): `PageWrapper`, `HomePage`, `StorePage`.
 `src/App.tsx`: DevGate > ThemeProvider > BrowserRouter > Routes: PageWrapper
 layout route containing `/` (HomePage), `/store` (StorePage), `/admin`
 (AdminPage), `*` → Navigate to `/`.
+
+## DESIGNER — `src/features/designer/` (added 2026-09-01)
+
+Admin-only design overlay studio for composing product images, mounted as
+the admin portal's **Designer** tab (`DesignerTab`, default export from
+`src/features/designer/DesignerTab.tsx`). Pure client side — no new deps.
+
+### Data model (local to the feature)
+
+```ts
+interface DesignLayer {
+  id: string
+  name: string           // "Overlay 1", "Drawing 2", editable not required
+  src: string            // data URL (uploaded PNG or drawn canvas export)
+  naturalW: number
+  naturalH: number
+  x: number; y: number   // layer CENTER, in base-image pixel coordinates
+  scale: number          // uniform
+  rotation: number       // degrees, INTEGER (1° increments)
+  flipH: boolean
+  flipV: boolean
+  tint: string | null    // hex recolor, null = original colors
+}
+```
+
+All layer coordinates live in the base image's natural pixel space; the
+on-screen stage is that space scaled to fit its container, so export math
+and interaction math share one source of truth.
+
+### Stage
+
+- Base image upload (file input, image/*). Until one is chosen, show an
+  empty-state prompt. Replacing the base keeps existing layers.
+- Stage renders the base scaled-to-fit with layers as absolutely positioned
+  `<img>`s using CSS transforms:
+  `translate(-50%,-50%) rotate(Rdeg) scale(±S, ±S)` at (x,y)·stageScale.
+- Click a layer (or its list row) to select it. Selected layer shows a
+  selection outline with 4 corner scale handles and a rotate handle above.
+  Pointer-event interactions (mouse AND touch, setPointerCapture):
+  - drag body → move; arrow keys nudge 1px in base space (Shift = 10px)
+  - drag corner handle → uniform scale about the center
+  - drag rotate handle → rotation snapped to whole degrees
+- Clicking empty stage space deselects.
+
+### Overlay sources
+
+A select dropdown "Overlay source": `Upload PNG` | `Draw`.
+- Upload PNG: file input (PNG with transparency expected; accept image/png,
+  image/webp). New layer added centered at ~60% of base's smaller side.
+- Draw: shows a drawing panel — a transparent-background canvas (fixed
+  square working size, e.g. 512×512) with brush color picker, brush size
+  slider, eraser toggle, undo (per stroke), clear, and an **Apply to base**
+  button that exports the canvas (trimmed to the inked bounding box) as a
+  data URL and adds it as a layer. The drawing canvas must work with mouse
+  and touch (pointer events, no page scroll while drawing).
+
+### Selected-layer controls
+
+Rotation number input (integer degrees, ±1 step buttons), scale input or
+slider, Flip horizontal / Flip vertical toggles, tint color input with an
+enable checkbox or "clear tint" affordance, and Delete layer. Tinting
+recolors the PNG while PRESERVING alpha and shading: offscreen canvas —
+draw image; `globalCompositeOperation='color'`; fill tint;
+`'destination-in'`; draw image again. Cache tinted data URLs per (src, tint).
+
+### Layer list
+
+Topmost layer first. Each row: small thumbnail, name, move up / move down
+(z-order), delete. Clicking a row selects the layer on the stage. Stage
+z-order always matches list order.
+
+### Output
+
+- **Save to device**: render base + layers (same transform math) onto an
+  offscreen canvas at the base's natural size (cap the longest side at
+  2400px, scaling everything down proportionally) and download as PNG
+  (`a[download]` with an object URL, e.g. `ali3ncak3-design.png`).
+- **Create product…**: render the composite downscaled (longest side
+  ≤ 1024) to a WebP (fallback JPEG) data URL, then open a modal with the
+  new-product form: title, price in dollars (→ priceCents), stock,
+  description, Create + Cancel. Create appends a Product via
+  `getProducts()`/`saveProducts()` with `published: false`,
+  `promoted: false`, and `imageDataUrl` set, shows a success note (link the
+  admin's Products tab conceptually — a simple "created" message is fine),
+  and closes the modal. Warn in the modal that images are stored in the
+  browser (localStorage) until a backend exists.
+
+### Shared-model changes (wired outside the feature)
+
+- `Product.imageDataUrl?: string` (optional, backwards compatible).
+- `ProductCard` renders `imageDataUrl` as the card image (object-fit:
+  cover, alt = product title) when present, else the existing tinted
+  placeholder square.
+- Admin Products tab shows a small thumbnail when a product has an image.
+- AdminPage gains the Designer tab (Layout, Palette, Products, Designer,
+  Settings).
+
+Styling: co-located `designer.css`, admin-dashboard look via `--c-surface`
+/ `--c-surface-text` (+ color-mix like admin.css), both modes, responsive
+(stage stacks above controls on narrow screens, no horizontal page scroll).
