@@ -1,0 +1,235 @@
+/* Font lab (/font) overlay. Colors come from the mode surface tokens so the
+   panel follows light/dark mode; derived shades use color-mix against
+   --c-surface-text like the admin portal. Sits above the sticky navbar (40)
+   and below dialogs (60+). */
+
+.fontlab-content {
+  /* Layout-neutral wrapper: the sections stay direct flex items of .site-main. */
+  display: contents;
+}
+
+/* Keep line breaks typed while editing (see editableText.ts) once editing is
+   off. Only the wrapping mode stays as authored (nowrap prices stay nowrap). */
+.fontlab-content [data-fontlab-touched] {
+  white-space-collapse: preserve;
+}
+
+.fontlab-content [data-fontlab-editable]:hover {
+  outline: 1px dashed color-mix(in srgb, currentColor 45%, transparent);
+  outline-offset: 3px;
+  cursor: text;
+}
+
+.fontlab-content [data-fontlab-editable]:focus {
+  outline: 2px solid color-mix(in srgb, currentColor 70%, transparent);
+  outline-offset: 3px;
+}
+
+/* The Size control scales the page via the root font size (sizes.ts). The
+   lab's own chrome sizes its text in --fl-rem, which undoes that scale, so
+   the panel stays the same size whichever preset is previewed. */
+.fontlab-panel,
+.fontlab-reopen,
+.fontlab-suggestion {
+  --fl-rem: calc(1rem / var(--text-scale, 1));
+  font-size: var(--fl-rem);
+}
+
+.fontlab-panel {
+  --fl-line: color-mix(in srgb, var(--c-surface-text) 22%, transparent);
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-3);
+  transform: translateX(-50%);
+  z-index: 50;
+  width: min(94vw, 34rem);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  background: var(--c-surface);
+  color: var(--c-surface-text);
+  border: 1px solid var(--fl-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+}
+
+.fontlab-panel__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.fontlab-panel__title {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.fontlab-panel__name,
+.fontlab-panel__detail {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fontlab-panel__name {
+  font-size: calc(1.05 * var(--fl-rem));
+  font-weight: 600;
+}
+
+.fontlab-panel__detail {
+  font-size: calc(0.78 * var(--fl-rem));
+  color: color-mix(in srgb, var(--c-surface-text) 70%, transparent);
+}
+
+.fontlab-icon-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: calc(1.3 * var(--fl-rem));
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fontlab-icon-btn:hover {
+  background: color-mix(in srgb, var(--c-surface-text) 12%, transparent);
+}
+
+.fontlab-panel__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
+  font-size: calc(0.85 * var(--fl-rem));
+}
+
+.fontlab-field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.fontlab-field select,
+.fontlab-text-btn {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--fl-line);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.fontlab-field select option {
+  background: var(--c-surface);
+  color: var(--c-surface-text);
+}
+
+.fontlab-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  margin-top: var(--space-2);
+}
+
+.fontlab-dot {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.fontlab-dot::after {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: color-mix(in srgb, var(--c-surface-text) 35%, transparent);
+  transition: width 0.15s, height 0.15s, background 0.15s;
+}
+
+.fontlab-dot:hover::after {
+  background: color-mix(in srgb, var(--c-surface-text) 75%, transparent);
+}
+
+.fontlab-dot--original::after {
+  background: var(--c-primary);
+}
+
+.fontlab-dot[aria-pressed='true']::after {
+  width: 12px;
+  height: 12px;
+  background: var(--c-surface-text);
+}
+
+.fontlab-dot:focus-visible {
+  outline: 2px solid var(--c-surface-text);
+  outline-offset: -2px;
+  border-radius: 50%;
+}
+
+.fontlab-panel__hint {
+  margin: var(--space-2) 0 0;
+  font-size: calc(0.78 * var(--fl-rem));
+  text-align: center;
+  color: color-mix(in srgb, var(--c-surface-text) 72%, transparent);
+}
+
+.fontlab-panel kbd,
+.fontlab-suggestion kbd {
+  padding: 0 4px;
+  border: 1px solid var(--fl-line, color-mix(in srgb, var(--c-surface-text) 22%, transparent));
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.9em;
+}
+
+.fontlab-reopen {
+  position: fixed;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  z-index: 50;
+  width: 48px;
+  height: 48px;
+  border: 1px solid color-mix(in srgb, var(--c-surface-text) 22%, transparent);
+  border-radius: 50%;
+  background: var(--c-surface);
+  color: var(--c-surface-text);
+  box-shadow: var(--shadow-2);
+  font-size: calc(1.05 * var(--fl-rem));
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fontlab-suggestion {
+  position: fixed;
+  z-index: 55;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 232px;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--c-surface-text) 22%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  color: var(--c-surface-text);
+  box-shadow: var(--shadow-2);
+  font-size: calc(0.8 * var(--fl-rem));
+  white-space: nowrap;
+  cursor: pointer;
+}

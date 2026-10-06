@@ -24,6 +24,12 @@ Vite + React + TypeScript SPA, deployed to GitHub Pages:
   (guaranteed contrast), or black/white neutral via a per-palette toggle.
 - **Admin portal** (`/admin`, no nav link): layout reordering, product/stock
   management, palette designer, co-owner management.
+- **Font lab** (`/font`, no nav link): preview 30 Google Fonts across the
+  Home page with pagination dots and a serif / sans-serif / strange & weird
+  filter (10 alien and otherworldly display faces), scale all
+  text with eight size presets (85–120% in 5% steps, Medium default), edit
+  any section text in place, and type `lorem` / `lorem2` / `lorem3` + Tab to fill
+  it with placeholder copy.
 
 ## Prototype constraints
 

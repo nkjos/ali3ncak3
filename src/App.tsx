@@ -3,6 +3,7 @@ import DevGate from './features/gate/DevGate'
 import { ThemeProvider } from './theme/ThemeProvider'
 import { HomePage, PageWrapper, StorePage } from './features/site'
 import AdminPage from './features/admin/AdminPage'
+import { FontLabPage } from './features/fontlab'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/store" element={<StorePage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/font" element={<FontLabPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>

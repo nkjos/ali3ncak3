@@ -430,3 +430,49 @@ longer changes the mode preference; the palette designer's "Native mode"
 readout is informational (which mode the picked color naturally suits).
 Admin tab order: Palette, Products, Designer, Layout, Settings (opens on
 Palette).
+
+## FONT LAB — `src/features/fontlab/` (added 2026-10-06)
+
+Owner tool at `/font` (no nav link) for previewing typefaces with real page
+content. It renders the Home page (PageWrapper maps `/font` to the home
+layout, so nav/section/footer colors match `/`) under a floating panel:
+
+- **Font picker**: 30 Google Fonts families (10 serif, 10 sans-serif,
+  alternating, then 10 "strange & weird" display faces) as pagination dots,
+  plus dot 0 = the site's own `--font-body`. Prev/next buttons, arrow
+  keys/Home/End on the dots, and a Style select (All / Serif / Sans-serif /
+  Strange & weird) that limits the dots and switches to the first font of
+  that style if the current one doesn't match. The weird set mixes
+  ancient-exotic (Macondo, Uncial Antiqua, Metamorphous), living/organic
+  (Moirai One, Rubik Microbe, Kablammo) and alien-tech (Orbitron, Major Mono
+  Display, Megrim, Codystar); Papyrus itself is a licensed Monotype font not
+  on Google Fonts. While a weird face loads, the generic `fantasy` family
+  (Papyrus on macOS) stands in. Catalog invariants: `__tests__/fonts.test.ts`. Choosing a
+  font loads only that family's stylesheet and applies it to every element
+  (`body, body * { font-family: … !important }`); leaving `/font` removes it.
+  Family and style are remembered per browser (`ac3:fontLab:family`,
+  `ac3:fontLab:style`). Every family/weight was verified against the Google
+  Fonts CSS2 API — a missing weight makes the whole request fail.
+- **Editable text**: with "Edit text" on, every element in the sections with
+  its own visible text is `contentEditable="plaintext-only"` (buttons and form
+  controls excluded); links and buttons don't activate while editing. Edits
+  only touch the DOM — nothing is saved — and "Reset text" remounts the
+  sections to restore the original copy.
+- **Lorem autocomplete**: typing `lorem`, `lorem2` … `lorem9` directly
+  before the caret shows a suggestion chip; Tab (or clicking the chip)
+  replaces the keyword. `loremN` = the classic paragraph repeated N times
+  with the first 5 × (N − 1) words removed (lorem = 69 words, lorem2 = 133
+  starting "Consectetur…", lorem3 = 197 starting "Eiusmod…"). Expansion edits
+  the existing text node (via `insertText`) so React's node references stay
+  valid. Logic + tests: `lorem.ts`, `__tests__/lorem.test.ts`.
+- **Text size**: a Size select beside Style with eight presets, smallest
+  to largest: XX-Small 85%, X-Small 90%, Small 95%, **Medium 100%
+  (default)**, Large 105%, XL 110%, XXL 115%, XXXL 120% — each step changes
+  every font size by 5% of its designed size, so heading/body/caption
+  proportions never change. Applied as a percentage on `<html>` (all site
+  font sizes are rem) plus `--text-scale`, which multiplies the viewport term
+  of the five `clamp(…vw…)` headings in site.css so they scale identically at
+  every width. The lab's own panel sizes its text in `--fl-rem` (1rem divided
+  by the scale), so the tool stays the same size. Remembered per browser
+  (`ac3:fontLab:size`); leaving `/font` removes the override. Logic + tests:
+  `sizes.ts`, `__tests__/sizes.test.ts`.

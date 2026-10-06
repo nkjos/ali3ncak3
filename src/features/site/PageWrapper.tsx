@@ -1,7 +1,8 @@
 // Template wrapper used by ALL routes (react-router layout route).
 // Renders NavBar, <main> with the nested route Outlet, and Footer, and
 // computes the page's SectionColorScheme from the COMPLETE color engine:
-//   - '/'        -> enabled sections of the home layout
+//   - '/', '/font' -> enabled sections of the home layout (/font renders
+//                    the home page under the font lab overlay)
 //   - '/store'   -> enabled sections of the store layout
 //   - any other route (e.g. /admin) -> 0 sections, so nav = colors[k-1]
 //     and footer = colors[0] per the cycling contract.
@@ -29,7 +30,7 @@ function routePageId(pathname: string): PageId | null {
   // Lowercased to match react-router's own case-insensitive route matching
   // (/Store renders StorePage, so it must get StorePage's cycle counts).
   const path = pathname.toLowerCase().replace(/\/+$/, '') || '/'
-  if (path === '/') return 'home'
+  if (path === '/' || path === '/font') return 'home'
   if (path === '/store') return 'store'
   return null // non-content routes (e.g. /admin) -> 0 sections
 }
