@@ -4,13 +4,16 @@
 import type { SectionColors } from '../../lib/color'
 import { sectionVarStyle } from './Section'
 
+// Read once at load, not per render (keeps render pure).
+const YEAR = new Date().getFullYear()
+
 export function Footer({ colors }: { colors: SectionColors }) {
   return (
     <footer className="site-footer" style={sectionVarStyle(colors)}>
       <div className="site-footer__inner">
         <span className="site-footer__brand">Ali3nCak3</span>
         <span className="site-footer__copy">
-          &copy; {new Date().getFullYear()} Ali3nCak3 · baked on Earth, inspired
+          &copy; {YEAR} Ali3nCak3 · baked on Earth, inspired
           elsewhere
         </span>
         {/* Socials placeholder — real links land with the brand accounts. */}
